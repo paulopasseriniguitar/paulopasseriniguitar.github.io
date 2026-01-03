@@ -1,0 +1,2986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- DESPUÉS de <meta name="viewport"... y ANTES de <title> -->
+
+<!-- Manifest para PWA -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Iconos para PWA -->
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Color de la barra de direcciones en móviles -->
+<meta name="theme-color" content="#1e5aa8">
+
+<!-- Para iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+
+<title>Tablatura</title>
+
+<style>
+* { box-sizing: border-box; user-select: none; }
+
+body {
+    margin: 0;
+    background: #ccc;
+    font-family: monospace;
+    overscroll-behavior-y: contain;
+    overflow-y: scroll;
+    overflow-x: auto;
+    scroll-padding-bottom: 260px;
+    min-height: 100vh;
+    padding-bottom: 280px;
+    box-sizing: border-box;
+}
+
+/* ===== ZOOM ===== */
+body.view-page .page {
+    transform: scale(0.22);
+    transform-origin: top center;
+}
+body.view-page { overflow-y: auto; }
+
+/* ===== HOJA ===== */
+.page {
+    width: 210mm;
+    height: auto;
+    background: #fff;
+    margin: 10px auto;
+    padding: 18mm 12mm;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+    position: relative;
+}
+.page:last-of-type {
+    margin-bottom: 320px;
+}
+
+.title {
+    font-size: 22px;
+    border: none;
+    outline: none;
+}
+
+/* ===== SISTEMA ===== */
+.system {
+position: relative;
+display: flex;
+flex-direction: column;
+gap: 4px;
+margin-bottom: 48px;
+}
+.chord-layer {
+position: absolute;
+top: -40px;        /* ✅ ya está en -40px */
+left: 0;
+width: 100%;
+height: 24px;
+pointer-events: none;
+font-family: Arial, sans-serif;
+font-size: 14px;
+font-weight: bold;
+color: #000;
+}
+.arc-layer {
+position: absolute;
+top: -28px;
+left: 0;
+height: 28px;
+pointer-events: none;
+}
+.ligado-layer {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+overflow: visible;
+}
+.string {
+white-space: nowrap;
+position: relative;
+}
+.string-label {
+display: inline-block;
+width: 12px;
+margin-right: 2px;
+}
+.slot {
+display: inline-flex;
+justify-content: center;
+align-items: center;
+width: 15px;
+cursor: pointer;
+}
+.slot.active {
+background: #000;
+color: #fff;
+}
+.chord {
+position: absolute;
+top: 0;
+left: 0;
+pointer-events: auto;
+cursor: pointer;
+white-space: nowrap;
+background: #fff;
+padding: 0 2px;
+border-radius: 2px;
+box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+min-width: 0;
+}
+.chord:hover {
+background: #f0f0f0;
+}
+
+/* ===== TECLADO ===== */
+.keyboard-wrap {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #222;
+    padding: 4px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-height: 600px) {
+    body:not(.preview-mode):not(.view-page) {
+        padding-bottom: 340px;
+    }
+}
+
+/* ===== TRASTERA ===== */
+.fretboard {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.fret-row {
+    display: flex;
+    gap: 2px;
+    width: max-content;
+}
+
+.fret {
+    background: #444;
+    color: #fff;
+    font-size: 18px;
+    padding: 9px 0;
+    min-width: 42px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.fret:active { background: #1e5aa8; }
+
+/* ===== BOTONES ===== */
+.controls {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.key {
+    background: #1e5aa8;
+    color: #fff;
+    padding: 8px 0;
+    text-align: center;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    height: 60px;
+}
+
+.key.arrow { font-size: 22px; font-weight: 900; }
+.key.warn { font-size: 14px; font-weight: 700; }
+.key.active-mode { background: #d07a00; }
+
+@media print {
+    .keyboard-wrap, .menu-wrap, .controls, .fretboard {
+        display: none !important;
+    }
+
+    body {
+        background: none;
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    .page {
+        margin: 0;
+        padding: 10mm 12mm;
+        gap: 24px;
+        height: auto !important;
+        background: #fff;
+        transform: none !important;
+        position: static !important;
+    }
+
+    .system {
+        gap: 3px;
+        margin-bottom: 30px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .string { line-height: 1; white-space: nowrap; }
+
+    .slot.active {
+        background: #000;
+        color: #fff;
+    }
+
+    .title { font-size: 20px; margin-bottom: 6px; }
+
+    .arc-layer { visibility: visible !important; }
+    svg { overflow: visible !important; }
+    input, button { pointer-events: none; }
+}
+
+/* ===== MENÚ ⋮ ===== */
+.menu-wrap {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    font-family: monospace;
+}
+
+.menu-button {
+    background: #1e5aa8;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 20px;
+    user-select: none;
+}
+
+.menu-content {
+    display: none;
+    position: absolute;
+    top: 36px;
+    right: 0;
+    background: #fff;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    min-width: 140px;
+    overflow: hidden;
+}
+
+.menu-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.menu-item:hover {
+    background: #1e5aa8;
+    color: #fff;
+}
+
+/* ===== VISTA PREVIA ===== */
+body.preview-mode {
+    overflow: hidden;
+    background: #999;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+body.preview-mode .page {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    transform-origin: top left;
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    height: auto;
+}
+
+#exitPreviewBtn {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e5aa8;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    display: none;
+    z-index: 2000;
+}
+
+.key.ligado {
+    transform: rotate(180deg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.system { overflow: visible; }
+
+.slot.ghost {
+  display: inline-block;
+  transform: scaleX(0.60);
+  transform-origin: center;
+  text-indent: -6px;
+  font-weight: bold;
+}
+
+/* ✅ Estilo de botones del modal — AUTOAJUSTABLES */
+.chord-btn {
+  padding: 6px 10px;
+  background: #e9ecef;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;        /* ← clave: ancho se ajusta al texto */
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;              /* ≈ ancho de "7" */
+  height: 36px;
+  box-sizing: border-box;
+}
+
+/* ✅ Notas: 7 botones, 1 fila, ancho proporcional (100% / 7) */
+#noteButtons .chord-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ✅ Alteraciones más grandes */
+#accidentalButtons .chord-btn {
+  font-size: 20px;
+  padding: 6px 12px;
+  min-width: 46px;
+  font-family: "Segoe UI Symbol", "Arial Unicode MS", "Noto Sans Symbols", sans-serif;
+  line-height: 1;
+}
+
+/* ✅ Comportamiento en MÓVIL */
+@media (max-width: 768px) {
+  .chord-btn {
+    font-size: 16px;
+    padding: 8px 10px;
+    min-width: 40px;
+    height: 44px;
+  }
+  #accidentalButtons .chord-btn {
+    font-size: 22px;
+    min-width: 52px;
+    height: 52px;
+  }
+
+  /* ✅ Notas: una sola fila, con scroll horizontal si no caben */
+  #noteButtons {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  /* ✅ Alteraciones: siempre una fila */
+  #accidentalButtons {
+    flex-wrap: nowrap;
+  }
+
+  /* ✅ Tipos: pueden envolverse, pero con mejor espaciado */
+  #typeButtons > div {
+    gap: 5px;
+  }
+}
+
+.chord-btn:hover {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+.chord-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+  font-weight: bold;
+}
+
+/* ✅ Modo inversión: colores alternativos */
+.bass-mode .chord-btn {
+  background: #e0e0e0;
+}
+.bass-mode .chord-btn.active {
+  background: #007bff;
+  color: white;
+}
+#bassModeBtn.active {
+  background: #d1ecf1;
+  color: #0c5460;
+  border-color: #bee5eb;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="menu-wrap">
+    <div class="menu-button" onclick="toggleMenu()">⋮</div>
+  <div class="menu-content" id="menuContent">
+      <div class="menu-item" onclick="loadTheme(); closeMenu()">Abrir</div>
+	<div class="menu-item" onclick="saveTheme(); closeMenu()">Guardar</div>
+	<div class="menu-item" onclick="newTheme(); closeMenu()">Nuevo Tema</div>
+	<div class="menu-item" onclick="addSystem(); closeMenu()">Agregar sistema</div>
+	<div class="menu-item" onclick="removeActiveSystem(); closeMenu()">Borrar sistema</div>
+	<div class="menu-item" onclick="printPDF(); closeMenu()">Crear PDF</div>
+	<div class="menu-item" onclick="togglePreview(); closeMenu()">Vista Previa</div>
+	<div class="menu-item" onclick="openTranspose(); closeMenu()">Transposición simple</div>
+  </div>
+
+</div>
+
+
+
+<div class="page">
+  <input class="title" placeholder="Título del tema">
+  <div class="tab-container" data-page="1"></div>
+</div>
+
+<div class="keyboard-wrap">
+    <div class="fretboard" id="fretboard"></div>
+
+<div class="controls">
+
+    <!-- FILA 1: flechas + deshacer + BKSP + ACORDES -->
+    <div class="key arrow" onclick="buttonPressed(moveH, -1)">←</div>
+    <div class="key arrow" onclick="buttonPressed(moveH, 1)">→</div>
+    <div class="key arrow" onclick="buttonPressed(moveV, -1)">↑</div>
+    <div class="key arrow" onclick="buttonPressed(moveV, 1)">↓</div>
+    <div class="key action" onclick="buttonPressed(backspace)">↶</div>
+    <div class="key warn" onclick="buttonPressed(removeLeftColumn)">BKSP</div>
+    <div class="key action" onclick="buttonPressed(insertSpace)">SPACE</div>
+    <div class="key action" onclick="buttonPressed(openChordEditor)">+Ac</div> <!-- ✅ botón azul, visible siempre -->
+
+    <!-- FILA 2: modos -->
+    <div class="key action" id="arcStartBtn" onclick="buttonPressed(startArc)">INICIO ARCO</div>
+    <div class="key action" id="arcEndBtn" onclick="buttonPressed(endArc)">FIN ARCO</div>
+    <div class="key warn" id="eraseArcBtn" onclick="buttonPressed(toggleEraseArc)">BORRAR ARCOS</div>
+    <div class="key warn" id="eraseLigadoBtn" onclick="buttonPressed(toggleEraseLigado)">BORRAR ︵ /</div>
+    <div class="key action" id="plaqueBtn" onclick="buttonPressed(togglePlaque)">PLAQUÉ</div>
+    <div class="key action" onclick="buttonPressed(toggleGhost)"> ( ) </div>
+    <div class="key action" id="deleteSlotBtn" onclick="deleteActiveSlot()">BORRAR NOTA</div>
+    <div class="key action ligado" onclick="buttonPressed(createLigado)">︵</div>
+    <div class="key action slide" onclick="buttonPressed(createSlide)">/</div>
+
+</div>
+
+
+</div>
+
+<script>
+
+function buildState() {
+  return {
+    title: document.querySelector(".title")?.value || "",
+    slots: [...document.querySelectorAll(".slot")].map(s => ({
+      system: s.dataset.system,
+      string: s.dataset.string,
+      pos: s.dataset.pos,
+      value: s.textContent
+    })),
+    arcs: arcs.map(a => ({
+      sys: a.sys,
+      from: a.from,
+      to: a.to,
+      level: a.level,
+      type: a.type,
+      string: a.string
+    })),
+    chords: chords.map(c => ({
+      sys: c.sys,
+      pos: c.pos,
+      text: c.text
+    }))
+  };
+}
+
+
+
+function loadAutoSave() {
+  const raw = localStorage.getItem("jgt-autosave");
+  if (!raw) return;
+  let state;
+  try {
+    state = JSON.parse(raw);
+  } catch {
+    return;
+  }
+
+  // ✅ 1. Restaurar título
+  const titleInput = document.querySelector(".title");
+  if (titleInput && state.title) {
+    titleInput.value = state.title;
+  }
+
+  // ✅ 2. Restaurar slots (como antes)
+  if (Array.isArray(state.slots)) {
+    state.slots.forEach(s => {
+      const slot = document.querySelector(
+        `.slot[data-system="${s.system}"][data-string="${s.string}"][data-pos="${s.pos}"]`
+      );
+      if (slot) slot.textContent = s.value;
+    });
+  }
+
+  // ✅ 3. Restaurar arcos
+  if (Array.isArray(state.arcs)) {
+    arcs.forEach(a => a.el?.remove());
+    arcs = [];
+    state.arcs.forEach(a => {
+      const nuevo = drawArc(a.sys, a.from, a.to, {
+        type: a.type,
+        string: a.string
+      });
+      if (nuevo && a.level !== undefined) {
+        nuevo.level = a.level;
+      }
+    });
+  }
+
+  // ✅ 4. Restaurar acordes
+  if (Array.isArray(state.chords)) {
+    chords = [];
+    state.chords.forEach(c => {
+      if (c.sys != null && c.pos != null && c.text != null) {
+        chords.push({ sys: c.sys, pos: c.pos, text: c.text });
+      }
+    });
+  }
+
+  // ✅ 5. RESTAURAR VISIBILIDAD DE SISTEMAS (¡nuevo!)
+  // Determinar cuántos sistemas deben mostrarse: max(sys) + 1
+  const maxSys = Math.max(
+    ...state.slots.map(s => +s.system || 0),
+    ...state.arcs.map(a => +a.sys || 0),
+    ...state.chords.map(c => +c.sys || 0),
+    0
+  );
+  const neededSystems = Math.max(1, maxSys + 1);
+
+  // Mostrar los primeros `neededSystems`, ocultar el resto
+  const allSystems = document.querySelectorAll(".system");
+  allSystems.forEach((sys, idx) => {
+    sys.style.display = idx < neededSystems ? "flex" : "none";
+  });
+
+  // ✅ 6. Restaurar slot activo (mejorado)
+  const firstSlot = document.querySelector(".slot");
+  if (firstSlot) {
+    activateSlot(firstSlot);
+  }
+
+  updateGhostClasses();
+  renderAllChords();
+}
+
+
+
+
+/* ===== CONFIG ===== */
+const STRINGS = ["E","B","G","D","A","E"];
+let SYSTEMS = 6; // número total de sistemas en el DOM (puede crecer)
+const INITIAL_SYSTEMS = 6; // sistemas pre-generados al inicio (para compatibilidad)
+const SLOTS = 42;
+const FRETS = 24;
+
+/* ===== AUDIO ===== */
+const AudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playNote(string, fret) {
+    const base = [82.41, 110, 146.83, 196, 246.94, 329.63];
+    const freq = base[5 - string] * Math.pow(2, fret / 12);
+    const osc = AudioCtx.createOscillator();
+    const gain = AudioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, AudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, AudioCtx.currentTime + 0.8);
+    osc.connect(gain).connect(AudioCtx.destination);
+    osc.start();
+    osc.stop(AudioCtx.currentTime + 0.8);
+}
+
+
+
+function playColumnOfSlot(slot) {
+  const { system, pos } = slot.dataset;
+  document.querySelectorAll(
+    `.slot[data-system="${system}"][data-pos="${pos}"]`
+  ).forEach(s => {
+    const fret = cleanFret(s.textContent); // ✅ usa cleanFret
+    if (fret !== null) {
+      playNote(parseInt(s.dataset.string, 10), fret);
+    }
+  });
+}
+
+
+
+/* ===== ESTADO ===== */
+let activeSlot = null;
+let history = [];
+
+function cleanFret(text) {
+  const num = parseInt((text || "").replace(/[()]/g, ""), 10);
+  return isNaN(num) ? null : num;
+}
+
+let plaqueMode = false;
+let plaqueLastSlot = null;
+
+
+let eraseLigadoMode = false;
+let eraseArcMode = false;
+let arcStartSlot = null;   // inicio de arco por botón
+let chords = [];
+let arcs = [];
+
+// ✅ Ahora usamos el primer .tab-container (compatible con múltiples páginas)
+let tab = document.querySelector(".tab-container");
+
+
+// ✅ Devuelve el último .tab-container (donde se deben agregar nuevos sistemas)
+function getLastTabContainer() {
+  const containers = document.querySelectorAll(".tab-container");
+  return containers.length > 0 ? containers[containers.length - 1] : null;
+}
+
+
+/* ===== TAB ===== */
+function createSystem(sys) {
+  const system = document.createElement("div");
+  system.className = "system";
+  system.dataset.system = sys;
+
+  const chordLayer = document.createElement("div");
+  chordLayer.className = "chord-layer";
+  system.appendChild(chordLayer);
+
+  const arcSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  arcSvg.classList.add("arc-layer");
+  system.appendChild(arcSvg);
+
+  STRINGS.forEach((label, s) => {
+    const row = document.createElement("div");
+    row.className = "string";
+
+    const ligadoSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    ligadoSvg.classList.add("ligado-layer");
+    row.appendChild(ligadoSvg);
+
+    const l = document.createElement("span");
+    l.className = "string-label";
+    l.textContent = label + "|";
+    row.appendChild(l);
+
+    for (let p = 0; p < SLOTS; p++) {
+      const slot = document.createElement("span");
+      slot.className = "slot";
+      slot.textContent = "-";
+      slot.dataset.system = sys;
+      slot.dataset.string = s;
+      slot.dataset.pos = p;
+      slot.onclick = () => onSlotClick(slot);
+      row.appendChild(slot);
+    }
+    system.appendChild(row);
+  });
+  return system;
+}
+
+// ✅ Generar los 6 sistemas (para compatibilidad)
+for (let sys = 0; sys < SYSTEMS; sys++) {
+  const system = createSystem(sys);
+  tab.appendChild(system);
+}
+
+function onSlotClick(slot) {
+    if (eraseArcMode) {
+        eraseArcBySlot(slot);
+        return;
+    }
+    if (eraseLigadoMode) {
+        eraseLigadoBySlot(slot);
+        return;
+    }
+    activateSlot(slot);
+}
+
+
+
+/* ===== RESTO SIN CAMBIOS ===== */
+function activateSlot(slot) {
+  document.querySelectorAll(".slot.active").forEach(s => s.classList.remove("active"));
+  slot.classList.add("active");
+  activeSlot = slot;
+
+  // ✅ Guardar índice lógico del sistema (por orden en DOM)
+  const systems = Array.from(document.querySelectorAll(".system"))
+    .filter(el => el.style.display !== "none");
+  const sysIndex = systems.findIndex(sys =>
+    sys.contains(slot)
+  );
+  if (sysIndex >= 0) {
+    slot._logicalSystem = sysIndex; // propiedad privada, no DOM
+  }
+}
+
+function writeFromFret(string, fret) {
+  if (!activeSlot) return;
+
+  // ✅ Usar índice lógico, no dataset.system
+  const sysIndex = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
+  const { pos } = activeSlot.dataset;
+
+  const systems = Array.from(document.querySelectorAll(".system"))
+    .filter(el => el.style.display !== "none");
+  if (sysIndex < 0 || sysIndex >= systems.length) return;
+
+  const targetSystem = systems[sysIndex];
+  const target = targetSystem.querySelector(
+    `.slot[data-string="${string}"][data-pos="${pos}"]`
+  );
+  if (!target) return;
+
+  // ✅ Guardar en historial
+  const data = {
+    type: "note",
+    slot: target,
+    string,
+    fret,
+    oldValue: target.textContent
+  };
+  history.push(data);
+  target.textContent = fret;
+  playNote(string, fret);
+
+  // ✅ Avanzar solo si no está en modo PLAQUÉ
+  if (!plaqueMode) {
+    let nextPos = +pos + 1;
+    let nextSys = sysIndex;
+
+    if (nextPos >= SLOTS) {
+      nextPos = 0;
+      nextSys += 1;
+    }
+
+    // ✅ Límite dinámico: sistemas visibles, no SYSTEMS fijo
+    const visibleCount = systems.length;
+    if (nextSys >= visibleCount) nextSys = visibleCount - 1;
+
+    const nextSystem = systems[nextSys];
+    if (nextSystem) {
+      const nextSlot = nextSystem.querySelector(
+        `.slot[data-string="${string}"][data-pos="${nextPos}"]`
+      );
+      if (nextSlot) {
+        activateSlot(nextSlot);
+        ensureSlotVisible(nextSlot);
+      }
+    }
+  }
+
+  autoSave();
+}
+
+
+
+
+
+function backspace() {
+    if (!history.length) return;
+    const last = history.pop();
+    if (last.type === "note") {
+        last.slot.textContent = last.oldValue;
+        activateSlot(last.slot);
+    } else if (last.type === "arc") {
+        last.el.remove();
+    }
+}
+
+
+
+
+function insertSpace() {
+    cleanupOrphanedArcs(); // ✅ prevención
+    if (!activeSlot) return;
+
+    const startSys = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
+    const startPos = +activeSlot.dataset.pos;
+
+    /* ===== 1. MOVER NOTAS (DE ATRÁS HACIA ADELANTE) ===== */
+    for (let sys = SYSTEMS - 1; sys >= startSys; sys--) {
+        for (let pos = SLOTS - 1; pos >= 0; pos--) {
+            // No tocar lo que está antes del punto de inserción
+            if (sys === startSys && pos <= startPos) continue;
+
+            for (let string = 0; string < 6; string++) {
+                const current = document.querySelector(
+                    `.slot[data-system="${sys}"][data-string="${string}"][data-pos="${pos}"]`
+                );
+                if (!current) continue;
+
+                // slot anterior lógico
+                let prevSys = sys;
+                let prevPos = pos - 1;
+
+                if (prevPos < 0) {
+                    prevSys--;
+                    prevPos = SLOTS - 1;
+                }
+
+                if (prevSys < startSys) continue;
+
+                const prev = document.querySelector(
+                    `.slot[data-system="${prevSys}"][data-string="${string}"][data-pos="${prevPos}"]`
+                );
+
+                current.textContent = prev ? prev.textContent : "-";
+            }
+        }
+    }
+
+    // Vaciar slot activo
+    for (let s = 0; s < 6; s++) {
+        const slot = document.querySelector(
+            `.slot[data-system="${startSys}"][data-string="${s}"][data-pos="${startPos}"]`
+        );
+        if (slot) slot.textContent = "-";
+    }
+
+    /* ===== 2. ACTUALIZAR ARCOS Y LIGADOS ===== */
+    const newArcs = [];
+
+    // quitar TODOS los SVG primero
+    arcs.forEach(a => a.el?.remove());
+
+    arcs.forEach(a => {
+        // arco completamente antes → se mantiene igual
+        if (
+            a.sys < startSys ||
+            (a.sys === startSys && a.to < startPos)
+        ) {
+            newArcs.push(a);
+            return;
+        }
+
+        // modificar posiciones
+        if (a.type === "ligado" || a.type === "slide") {
+            // ligado/slide: solo afecta si está en el mismo sistema y cuerda
+            if (a.sys === startSys) {
+                if (a.from >= startPos) {
+                    a.from++;
+                    a.to++;
+                } else if (a.from < startPos && a.to >= startPos) {
+                    a.to++;
+                }
+            }
+            // si está en sistema posterior → se desplaza completa columna
+            else if (a.sys > startSys) {
+                a.from++;
+                a.to++;
+            }
+        } else {
+            // arco normal
+            if (a.sys > startSys || a.from >= startPos) {
+                a.from++;
+                a.to++;
+            } else if (a.from < startPos && a.to >= startPos) {
+                a.to++;
+            }
+        }
+
+        // eliminar si se sale
+        if (a.from >= SLOTS || a.to >= SLOTS) return;
+
+        newArcs.push(a);
+    });
+
+    // reconstrucción limpia
+    arcs = [];
+    newArcs.forEach(a => {
+        const nuevo = drawArc(a.sys, a.from, a.to, {
+            type: a.type,
+            string: a.string
+        });
+        if (nuevo) nuevo.level = a.level;
+    });
+
+    /* ===== 3. ACTUALIZAR CHORDS ===== */
+    const newChords = [];
+
+    chords.forEach(c => {
+        // Copiar el acorde original
+        let newChord = { ...c };
+
+        // Si el acorde está en un sistema posterior al inicio
+        if (c.sys > startSys) {
+            // Mover hacia adelante
+            newChord.pos++;
+            
+            // Si se sale del sistema, mover al siguiente sistema, primera posición
+            if (newChord.pos >= SLOTS) {
+                newChord.sys++;
+                newChord.pos = 0;
+            }
+        }
+        // Si el acorde está en el mismo sistema
+        else if (c.sys === startSys) {
+            // Solo mover si está en o después de la posición de inicio
+            if (c.pos >= startPos) {
+                newChord.pos++;
+                // Si se sale del sistema, mover al siguiente sistema
+                if (newChord.pos >= SLOTS) {
+                    newChord.sys++;
+                    newChord.pos = 0;
+                }
+            }
+        }
+        // Si el acorde está en un sistema anterior, no se mueve
+
+        // Filtrar acordes que queden en posiciones válidas
+        if (newChord.pos >= 0 && newChord.pos < SLOTS && newChord.sys >= 0 && newChord.sys < SYSTEMS) {
+            newChords.push(newChord);
+        }
+    });
+
+    chords = newChords;
+
+    updateGhostClasses();
+    renderAllChords();
+    autoSave();
+}
+
+
+
+
+function removeLeftColumn() {
+    cleanupOrphanedArcs(); // ✅ prevención
+    if (!activeSlot) return;
+
+    const startSys = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
+    const startPos = +activeSlot.dataset.pos;
+
+    // No se puede borrar si estamos en la primera columna absoluta
+    if (startSys === 0 && startPos === 0) return;
+
+    /* ===== 1. MOVER NOTAS (DE ADELANTE HACIA ATRÁS) ===== */
+    for (let sys = startSys; sys < SYSTEMS; sys++) {
+        for (let pos = (sys === startSys ? startPos : 0); pos < SLOTS; pos++) {
+            for (let string = 0; string < 6; string++) {
+                const current = document.querySelector(
+                    `.slot[data-system="${sys}"][data-string="${string}"][data-pos="${pos}"]`
+                );
+                if (!current) continue;
+
+                // slot destino (a la izquierda lógica)
+                let destSys = sys;
+                let destPos = pos - 1;
+
+                if (destPos < 0) {
+                    destSys--;
+                    destPos = SLOTS - 1;
+                }
+
+                // No tocar lo que queda antes del punto de borrado
+                if (
+                    destSys < startSys ||
+                    (destSys === startSys && destPos < startPos - 1)
+                ) continue;
+
+                const dest = document.querySelector(
+                    `.slot[data-system="${destSys}"][data-string="${string}"][data-pos="${destPos}"]`
+                );
+
+                if (dest) dest.textContent = current.textContent;
+            }
+        }
+    }
+
+    /* ===== 2. VACIAR ÚLTIMA COLUMNA ===== */
+    for (let string = 0; string < 6; string++) {
+        const last = document.querySelector(
+            `.slot[data-system="${SYSTEMS - 1}"][data-string="${string}"][data-pos="${SLOTS - 1}"]`
+        );
+        if (last) last.textContent = "-";
+    }
+
+    /* ===== 3. ACTUALIZAR ARCOS Y LIGADOS ===== */
+    const newArcs = [];
+
+    arcs.forEach(a => {
+        a.el?.remove();
+
+        if (a.sys < startSys) {
+            newArcs.push(a);
+            return;
+        }
+
+        if (a.type === "ligado" || a.type === "slide") {
+            if (a.sys === startSys) {
+                if (a.from >= startPos) {
+                    a.from--;
+                    a.to--;
+                } else if (a.from < startPos && a.to >= startPos) {
+                    a.to--;
+                }
+            } else if (a.sys > startSys) {
+                a.from--;
+                a.to--;
+            }
+        } else {
+            if (a.sys === startSys) {
+                if (a.from >= startPos) {
+                    a.from--;
+                    a.to--;
+                } else if (a.from < startPos && a.to >= startPos) {
+                    a.to--;
+                }
+            } else if (a.sys > startSys) {
+                a.from--;
+                a.to--;
+            }
+        }
+
+        if (a.from < 0 || a.to < 0 || a.from >= SLOTS || a.to >= SLOTS) return;
+        newArcs.push(a);
+    });
+
+    arcs = [];
+    newArcs.forEach(a => {
+        const nuevo = drawArc(a.sys, a.from, a.to, {
+            type: a.type,
+            string: a.string
+        });
+        if (nuevo) nuevo.level = a.level;
+    });
+
+    /* ===== 4. ACTUALIZAR CHORDS ===== */
+    // 🔴 CASO ESPECIAL: Cuando se borra el primer slot de un sistema
+    // y hay acordes en el primer slot del sistema siguiente, deben moverse
+    // al último slot del sistema actual
+    const newChords = [];
+
+    chords.forEach(c => {
+        // Copiar el acorde original
+        let newChord = { ...c };
+
+        // Si el acorde está en un sistema posterior al inicio
+        if (c.sys > startSys) {
+            // Mover hacia atrás
+            newChord.pos--;
+            
+            // Si se vuelve negativo, mover al sistema anterior, última posición
+            if (newChord.pos < 0) {
+                newChord.sys--;
+                newChord.pos = SLOTS - 1;
+            }
+        }
+        // Si el acorde está en el mismo sistema
+        else if (c.sys === startSys) {
+            // Solo mover si está en o después de la posición de inicio
+            if (c.pos >= startPos) {
+                newChord.pos--;
+                // No permitir posiciones negativas en el mismo sistema
+                if (newChord.pos < 0) {
+                    // Esto no debería ocurrir porque ya validamos startPos > 0
+                    return; // Descarta este acorde
+                }
+            }
+        }
+        // Si el acorde está en un sistema anterior, no se mueve
+
+        // Filtrar acordes que queden en posiciones válidas
+        if (newChord.pos >= 0 && newChord.pos < SLOTS && newChord.sys >= 0 && newChord.sys < SYSTEMS) {
+            newChords.push(newChord);
+        }
+    });
+
+    chords = newChords;
+
+    /* ===== 5. MOVER SLOT ACTIVO ===== */
+    let newSys = startSys;
+    let newPos = startPos - 1;
+
+    if (newPos < 0) {
+        newSys--;
+        newPos = SLOTS - 1;
+    }
+
+    // protección de borde
+    if (newSys < 0) {
+        newSys = 0;
+        newPos = 0;
+    }
+
+    const newActive = document.querySelector(
+        `.slot[data-system="${newSys}"][data-string="${activeSlot.dataset.string}"][data-pos="${newPos}"]`
+    );
+
+    if (newActive) activateSlot(newActive);
+    updateGhostClasses();
+    renderAllChords();
+    autoSave();
+}
+
+
+function ensureSlotVisible(slot) {
+  const rect = slot.getBoundingClientRect();
+  const margin = 80; // ~2 slots × ~40px promedio
+  const needScrollLeft = rect.left < margin;
+  const needScrollRight = rect.right > (window.innerWidth - margin);
+  if (needScrollLeft || needScrollRight) {
+    slot.scrollIntoView({
+      behavior: "auto",
+      block: "nearest",
+      inline: "center"
+    });
+  }
+}
+
+
+
+function moveH(d) {
+    if (!activeSlot) return;
+	const s = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
+	const { string, pos } = activeSlot.dataset;
+	let p = +pos + d;
+
+    if (p >= SLOTS) {
+        p = 0;
+        s += 1;
+        if (s >= SYSTEMS) s = SYSTEMS - 1;
+    }
+    if (p < 0) {
+        s -= 1;
+        if (s < 0) {
+            s = 0;
+            p = 0;
+        } else {
+            p = SLOTS - 1;
+        }
+    }
+
+	// ✅ Buscar por índice visual, no por data-system
+	const systems = Array.from(document.querySelectorAll(".system"))
+	  .filter(el => el.style.display !== "none");
+	if (s < 0 || s >= systems.length) return;
+	const targetSystem = systems[s];
+	const nextSlot = targetSystem.querySelector(
+	  `.slot[data-string="${string}"][data-pos="${p}"]`
+	);
+
+    if (nextSlot) {
+        activateSlot(nextSlot);
+        playColumnOfSlot(nextSlot);
+
+    ensureSlotVisible(nextSlot);
+    }
+}
+
+
+
+function moveV(d) {
+    if (!activeSlot) return;
+    const { system, string, pos } = activeSlot.dataset;
+    const s = +string + d;
+    if (s < 0 || s >= 6) return;
+
+    const targetSlot = document.querySelector(
+        `.slot[data-system="${system}"][data-string="${s}"][data-pos="${pos}"]`
+    );
+
+    if (targetSlot) {
+        activateSlot(targetSlot);
+
+        // ✅ Scroll con margen vertical (1 cuerda de holgura)
+        const container = document.documentElement; // viewport
+        const slotRect = targetSlot.getBoundingClientRect();
+        const margin = 30; // ~1 cuerda de margen
+
+        const isTooCloseToTop = slotRect.top < margin;
+        const isTooCloseToBottom = window.innerHeight - slotRect.bottom < margin;
+
+        if (isTooCloseToTop) {
+            window.scrollBy(0, slotRect.top - margin);
+        } else if (isTooCloseToBottom) {
+            window.scrollBy(0, slotRect.bottom - window.innerHeight + margin);
+        }
+    }
+}
+
+
+
+
+
+const fretboard = document.getElementById("fretboard");
+for (let s = 0; s < 6; s++) {
+    const row = document.createElement("div");
+    row.className = "fret-row";
+    for (let f = 0; f < FRETS; f++) {
+        const b = document.createElement("div");
+        b.className = "fret";
+        b.textContent = f;
+        b.onclick = () => writeFromFret(s, f);
+        row.appendChild(b);
+    }
+    fretboard.appendChild(row);
+}
+
+
+
+function togglePlaque() {
+    const wasActive = plaqueMode;
+    plaqueMode = !plaqueMode;
+
+    // feedback visual
+    document
+        .getElementById("plaqueBtn")
+        .classList.toggle("active-mode", plaqueMode);
+
+    // Si se ACTIVA plaqué, guardamos el slot actual
+    if (plaqueMode) {
+        plaqueLastSlot = activeSlot;
+    }
+
+    // Si se DESACTIVA plaqué, avanzamos una vez
+    if (wasActive && !plaqueMode && plaqueLastSlot) {
+        const { system, string, pos } = plaqueLastSlot.dataset;
+
+        let nextPos = +pos + 1;
+        let nextSys = +system;
+
+        if (nextPos >= SLOTS) {
+            nextPos = 0;
+            nextSys += 1;
+            if (nextSys >= SYSTEMS) nextSys = SYSTEMS - 1;
+        }
+
+        const nextSlot = document.querySelector(
+            `.slot[data-system="${nextSys}"][data-string="${string}"][data-pos="${nextPos}"]`
+        );
+
+        if (nextSlot) activateSlot(nextSlot);
+
+        plaqueLastSlot = null;
+    }
+}
+
+function startArc() {
+    // Si ya había un inicio activo → cancelar
+    if (arcStartSlot) {
+        arcStartSlot = null;
+        document
+            .getElementById("arcStartBtn")
+            .classList.remove("active-mode");
+        return;
+    }
+
+    // Si no hay slot activo, no hacer nada
+    if (!activeSlot || eraseArcMode) return;
+
+    // Setear nuevo inicio
+    arcStartSlot = activeSlot;
+
+    document
+        .getElementById("arcStartBtn")
+        .classList.add("active-mode");
+}
+
+
+function endArc() {
+
+console.log("endArc() llamada", { arcStartSlot, activeSlot });
+    if (!arcStartSlot || !activeSlot) return;
+
+    const startSys = +arcStartSlot.dataset.system;
+    const endSys   = +activeSlot.dataset.system;
+
+    // 🔒 Seguridad: solo mismo sistema
+    if (startSys !== endSys) {
+        arcStartSlot = null;
+        document
+            .getElementById("arcStartBtn")
+            .classList.remove("active-mode");
+        return;
+    }
+
+    const from = Math.min(
+        +arcStartSlot.dataset.pos,
+        +activeSlot.dataset.pos
+    );
+
+    const to = Math.max(
+        +arcStartSlot.dataset.pos,
+        +activeSlot.dataset.pos
+    );
+
+    drawArc(startSys, from, to);
+
+    // limpiar estado
+    arcStartSlot = null;
+    document
+        .getElementById("arcStartBtn")
+        .classList.remove("active-mode");
+autoSave();
+}
+
+
+
+
+function drawArc(sys, from, to, options = {}) {
+    const system = document.querySelector(`.system[data-system="${sys}"]`);
+    
+    let svg;
+    if (options.type === "ligado" || options.type === "slide") {
+        const stringRows = system.querySelectorAll(".string");
+        const stringRow = stringRows[options.string];
+        svg = stringRow ? stringRow.querySelector(".ligado-layer") : null;
+    } else {
+        svg = system.querySelector(".arc-layer");
+    }
+    if (!svg) return null;
+
+    const firstString = system.querySelector('.string');
+    const rowWidth = firstString.scrollWidth || 600;
+    svg.setAttribute("width", rowWidth);
+    svg.style.width = rowWidth + "px";
+
+    let level = 0;
+    if (options.type !== "ligado") {
+        while (
+            arcs.some(a =>
+                a.type !== "ligado" &&
+                a.sys === sys &&
+                ((from <= a.to && from >= a.from) ||
+                 (to <= a.to && to >= a.from)) &&
+                a.level === level
+            )
+        ) {
+            level++;
+        }
+    }
+
+    // ✅ Buscar slots en la cuerda correcta (ligados y slides) o en todo el sistema (arcos)
+    let slotFrom, slotTo;
+    if (options.type === "ligado" || options.type === "slide") {
+        const row = system.querySelectorAll(".string")[options.string];
+        if (!row) return null;
+        const slotsInString = row.querySelectorAll('.slot[data-pos]');
+        slotFrom = [...slotsInString].find(s => +s.dataset.pos === from);
+        slotTo   = [...slotsInString].find(s => +s.dataset.pos === to);
+    } else {
+        const allSlots = system.querySelectorAll('.slot[data-pos]');
+        slotFrom = [...allSlots].find(s => +s.dataset.pos === from);
+        slotTo   = [...allSlots].find(s => +s.dataset.pos === to);
+    }
+    if (!slotFrom || !slotTo) return null;
+
+    const isLigado = options.type === "ligado";
+    const isSlide = options.type === "slide";
+
+    const x1 = slotFrom.offsetLeft + slotFrom.offsetWidth / 2;
+    const x2 = slotTo.offsetLeft   + slotTo.offsetWidth   / 2;
+
+    let y;
+    if (isLigado) {
+        y = 13;
+    } else {
+        y = 20 - level * 6;
+    }
+
+    let dAttr;
+    if (isSlide) {
+        // ✅ línea recta: / (ascendente) o \ (descendente)
+        // 🔥 USAMOS cleanFret() para soportar (5), (12), etc.
+        const fretInicial = cleanFret(slotFrom.textContent);
+        const fretFinal   = cleanFret(slotTo.textContent);
+        if (fretInicial === null || fretFinal === null) {
+            console.warn("⚠️ drawArc: valor no numérico", slotFrom.textContent, slotTo.textContent);
+            return null;
+        }
+        const ascendente = fretFinal > fretInicial;
+
+        // ✅ Altura de slides: y0 = 8 (sin modificar)
+        const y0 = 8;
+        const offsetV = 4;   // inclinación vertical
+        const offsetH = 5;   // ← ✅ más corto aún
+
+        const x1c = x1 + offsetH;
+        const x2c = x2 - offsetH;
+
+        if (ascendente) {
+            dAttr = `M ${x1c} ${y0 + offsetV} L ${x2c} ${y0 - offsetV}`; // /
+        } else {
+            dAttr = `M ${x1c} ${y0 - offsetV} L ${x2c} ${y0 + offsetV}`; // \
+        }
+    } else {
+        const height = isLigado ? 6 : 12;
+        dAttr = `M ${x1} ${y} Q ${(x1 + x2) / 2} ${isLigado ? y + height : y - height} ${x2} ${y}`;
+    }
+
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", dAttr);
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", "#000");
+    p.setAttribute("stroke-width", "1.4");
+    svg.appendChild(p);
+
+    const arcData = {
+        type: isSlide ? "slide" : (isLigado ? "ligado" : "arc"),
+        sys,
+        from,
+        to,
+        el: p,
+        level,
+        string: isLigado || isSlide ? options.string : null
+    };
+
+    arcs.push(arcData);
+    history.push(arcData);
+    return arcData;
+}
+
+
+
+function rebuildArcsFromDOM() {
+    arcs = [];
+
+    document.querySelectorAll(".arc-layer path").forEach(p => {
+        const sys = +p.closest(".system").dataset.system;
+        arcs.push({ el: p, sys });
+    });
+}
+
+
+
+
+
+
+
+
+function eraseArcBySlot(slot) {
+    const sys = +slot.dataset.system;
+    const slotX = slot.getBoundingClientRect().left + slot.offsetWidth / 2;
+
+    // Filtrar y eliminar SOLO arcos grandes (no ligados/slides)
+    arcs = arcs.filter(a => {
+        // Si no es arco, conservar
+        if (a.type === "ligado" || a.type === "slide") return true;
+        // Si no es del mismo sistema, conservar
+        if (a.sys !== sys) return true;
+
+        const r = a.el?.getBoundingClientRect();
+        if (!r) return true; // precaución si .el ya no existe
+
+        // Si atraviesa el slot, borrar el elemento y descartar el objeto
+        if (slotX >= r.left && slotX <= r.right) {
+            if (a.el) a.el.remove();
+            return false; // descartar del array
+        }
+
+        return true; // conservar
+    });
+
+    autoSave();
+}
+
+
+function eraseLigadoBySlot(slot) {
+    if (!slot) return;
+    const sys = +slot.dataset.system;
+    const slotX = slot.getBoundingClientRect().left + slot.offsetWidth / 2;
+
+    arcs = arcs.filter(a => {
+        // Solo afecta ligados y slides del mismo sistema
+        if ((a.type !== "ligado" && a.type !== "slide") || a.sys !== sys) return true;
+
+        const r = a.el?.getBoundingClientRect();
+        if (!r) return true;
+
+        if (slotX >= r.left && slotX <= r.right) {
+            if (a.el) a.el.remove();
+            return false; // eliminar del array
+        }
+
+        return true;
+    });
+
+    autoSave();
+}
+
+
+// ✅ Defensa contra arcos huérfanos: elimina referencias rotas de `arcs`
+function cleanupOrphanedArcs() {
+    arcs = arcs.filter(a => a.el && document.body.contains(a.el));
+}
+
+
+
+function toggleEraseArc() {
+    eraseArcMode = !eraseArcMode;
+
+    document
+        .getElementById("eraseArcBtn")
+        .classList.toggle("active-mode", eraseArcMode);
+
+    // 🔒 bloquear menú
+    document.querySelector(".menu-wrap").style.pointerEvents =
+        eraseArcMode ? "none" : "auto";
+}
+
+
+
+function toggleEraseLigado() {
+    eraseLigadoMode = !eraseLigadoMode;
+    document.getElementById("eraseLigadoBtn")
+        .classList.toggle("active-mode", eraseLigadoMode);
+    // Bloquear menú mientras está activo (como en borrar arcos)
+    document.querySelector(".menu-wrap").style.pointerEvents =
+        eraseLigadoMode ? "none" : "auto";
+}
+
+
+
+function togglePreview() {
+    const body = document.body;
+    const page = document.querySelector(".page");
+    const keyboard = document.querySelector(".keyboard-wrap");
+    const menuWrap = document.querySelector(".menu-wrap");
+
+    const inPreview = !body.classList.contains("preview-mode");
+
+    if (inPreview) {
+        // ===== Activar vista previa =====
+        body.classList.add("preview-mode");
+
+        // Ocultar teclado y menú
+        if (keyboard) keyboard.style.display = "none";
+        if (menuWrap) menuWrap.style.display = "none";
+
+        // Bloquear edición del título
+        const titleInput = document.querySelector(".title");
+        if (titleInput) titleInput.disabled = true;
+
+        // Bloquear clicks en los slots
+        document.querySelectorAll(".slot").forEach(s => s.style.pointerEvents = "none");
+
+        // Márgenes simulados
+        const MARGIN_X = 12; // en px, margen simulado izquierdo/derecho
+        const MARGIN_Y = 20; // margen superior/inferior
+
+        // Resetear transform y posición para medir tamaño real
+        page.style.transform = "scale(1)";
+        page.style.position = "absolute";
+        page.style.left = "0px";
+        page.style.top  = "0px";
+
+        const rect = page.getBoundingClientRect();
+
+        // Escalado proporcional
+        const scaleX = (window.innerWidth - 2 * MARGIN_X) / rect.width;
+        const scaleY = (window.innerHeight - 2 * MARGIN_Y) / rect.height;
+        const scale = Math.min(scaleX, scaleY);
+
+        page.style.transformOrigin = "top left";
+        page.style.transform = `scale(${scale})`;
+
+        // Centrar en pantalla
+        const offsetX = (window.innerWidth - rect.width * scale) / 2;
+        const offsetY = (window.innerHeight - rect.height * scale) / 2;
+        page.style.left = offsetX + "px";
+        page.style.top  = offsetY + "px";
+
+        // Agregar botón volver
+        let backBtn = document.createElement("div");
+        backBtn.id = "previewBackBtn";
+        backBtn.textContent = "Volver";
+        backBtn.style.position = "fixed";
+        backBtn.style.bottom = "20px";
+        backBtn.style.left = "50%";
+        backBtn.style.transform = "translateX(-50%)";
+        backBtn.style.padding = "10px 20px";
+        backBtn.style.background = "#1e5aa8";
+        backBtn.style.color = "#fff";
+        backBtn.style.fontSize = "18px";
+        backBtn.style.borderRadius = "6px";
+        backBtn.style.cursor = "pointer";
+        backBtn.style.zIndex = 2000;
+        backBtn.onclick = togglePreview;
+        body.appendChild(backBtn);
+
+        // Llevar scroll al inicio
+        window.scrollTo(0, 0);
+
+    } else {
+        // ===== Salir de vista previa =====
+        body.classList.remove("preview-mode");
+
+        if (keyboard) keyboard.style.display = "flex";
+        if (menuWrap) menuWrap.style.display = "block";
+        const titleInput = document.querySelector(".title");
+        if (titleInput) titleInput.disabled = false;
+        document.querySelectorAll(".slot").forEach(s => s.style.pointerEvents = "auto");
+
+        // Reset transform y posición
+        page.style.transform = "";
+        page.style.position = "";
+        page.style.left = "";
+        page.style.top = "";
+
+        // Eliminar botón volver
+        const backBtn = document.getElementById("previewBackBtn");
+        if (backBtn) backBtn.remove();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+function printPDF() {
+    document.querySelectorAll(".slot.active")
+        .forEach(s => s.classList.remove("active"));
+
+    const titleInput = document.querySelector(".title");
+    if (titleInput.value) document.title = titleInput.value;
+
+    setTimeout(() => window.print(), 100);
+}
+
+
+function buttonPressed(func, ...args) {
+    // Si estamos en modo borrar arcos o ligados, solo permitir salir del modo actual
+    if (eraseArcMode || eraseLigadoMode) {
+        if ((eraseArcMode && func === toggleEraseArc) ||
+            (eraseLigadoMode && func === toggleEraseLigado)) {
+            func(...args);
+        }
+        return;
+    }
+
+    // En modo normal, ejecutar cualquier función
+    func(...args);
+}
+
+
+const firstSlot = document.querySelector('.slot');
+if (firstSlot) {
+    firstSlot.classList.add('active');
+    activeSlot = firstSlot;
+}
+
+loadAutoSave();
+
+let autoSaveTimer = null;
+
+function autoSave() {
+    clearTimeout(autoSaveTimer);
+
+    autoSaveTimer = setTimeout(() => {
+        const state = buildState();
+        localStorage.setItem("jgt-autosave", JSON.stringify(state));
+    }, 1000); // 1 segundo
+}
+
+
+
+function newTheme() {
+  const ok = confirm("¿Descartar cambios y comenzar un nuevo tema?");
+  if (!ok) return;
+
+  // ✅ 1. Borrar autosave
+  localStorage.removeItem("jgt-autosave");
+
+  // ✅ 2. Limpiar TODOS los slots (sin importar cuántos sistemas existan)
+  document.querySelectorAll(".slot").forEach(s => {
+    s.textContent = "-";
+    s.classList.remove("active");
+  });
+
+  // ✅ 3. Limpiar estructuras
+  arcs.forEach(a => a.el?.remove());
+  arcs = [];
+  chords = [];
+  history = [];
+
+  // ✅ 4. Limpiar título
+  const titleInput = document.querySelector(".title");
+  if (titleInput) titleInput.value = "";
+
+  // ✅ 5. Ocultar TODOS los sistemas EXCEPTO el primero (índice 0)
+  const allSystems = document.querySelectorAll(".system");
+  allSystems.forEach((sys, idx) => {
+    sys.style.display = idx === 0 ? "flex" : "none";
+    // ✅ Asegurar coherencia del dataset.system
+    sys.dataset.system = idx;
+    sys.querySelectorAll(".slot").forEach(slot => {
+      slot.dataset.system = idx;
+    });
+  });
+
+  // ✅ 6. Activar primer slot del sistema 0, cuerda 5 (Mi grave), pos 0
+  const firstSlot = document.querySelector('.slot[data-system="0"][data-string="5"][data-pos="0"]');
+  if (firstSlot) {
+    activateSlot(firstSlot);
+    updateGhostClasses();
+  }
+
+  // ✅ 7. Renderizar y guardar
+  renderAllChords();
+  autoSave();
+}
+
+
+
+
+function saveTheme() {
+    const suggested = document.querySelector(".title")?.value?.trim() || "nuevo-tema";
+
+    const name = prompt(
+        "Nombre del tema:\n(se guardará en Descargas como .json)\nIGNORAR CUADRO DE DIALOGO ARCHIVO DESCARGADO",
+        suggested
+    );
+
+    if (!name) return;
+
+    const filename = name.endsWith(".json") ? name : name + ".json";
+
+    const state = buildState();
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+
+
+function loadTheme() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            let state;
+            try {
+                state = JSON.parse(reader.result);
+            } catch {
+                alert("Archivo inválido");
+                return;
+            }
+
+            loadState(state);   // reconstruye título, slots y arcos
+            autoSave();         // ✅ guardar inmediatamente el estado cargado
+        };
+
+        reader.readAsText(file);
+    };
+
+    input.click();
+}
+
+
+function loadState(state) {
+  // ✅ 1. Borrar TODO lo anterior: slots, arcos, historial, acordes
+  document.querySelectorAll(".slot").forEach(s => s.textContent = "-");
+  arcs.forEach(a => a.el?.remove());
+  arcs = [];
+  chords = [];
+  history = [];
+
+  // ✅ 2. Título
+  const titleInput = document.querySelector(".title");
+  titleInput.value = state.title || "";
+
+  // ✅ 3. Determinar cuántos sistemas deben mostrarse
+  const maxSys = Math.max(
+    ...state.slots.map(s => +s.system || 0),
+    ...state.arcs.map(a => +a.sys || 0),
+    ...state.chords.map(c => +c.sys || 0),
+    0
+  );
+  const neededSystems = Math.max(1, maxSys + 1);
+
+  // ✅ 4. Asegurar que haya suficientes sistemas en el DOM
+  let currentSystems = document.querySelectorAll(".system").length;
+  while (currentSystems < neededSystems) {
+    const newSys = createSystem(currentSystems);
+    tab.appendChild(newSys);
+    SYSTEMS++;
+    currentSystems++;
+  }
+
+  // ✅ 5. Mostrar los primeros `neededSystems`, ocultar el resto
+  const allSystems = document.querySelectorAll(".system");
+  allSystems.forEach((sys, idx) => {
+    sys.style.display = idx < neededSystems ? "flex" : "none";
+    sys.dataset.system = idx;
+    sys.querySelectorAll(".slot").forEach(slot => slot.dataset.system = idx);
+  });
+
+  // ✅ 6. Cargar slots
+  if (Array.isArray(state.slots)) {
+    state.slots.forEach(s => {
+      const slot = document.querySelector(
+        `.slot[data-system="${s.system}"][data-string="${s.string}"][data-pos="${s.pos}"]`
+      );
+      if (slot) slot.textContent = s.value;
+    });
+  }
+
+  // ✅ 7. Cargar arcos
+  if (Array.isArray(state.arcs)) {
+    state.arcs.forEach(a => {
+      const nuevo = drawArc(a.sys, a.from, a.to, {
+        type: a.type,
+        string: a.string
+      });
+      if (nuevo && a.level !== undefined) {
+        nuevo.level = a.level;
+      }
+    });
+  }
+
+  // ✅ 8. Cargar acordes
+  if (Array.isArray(state.chords)) {
+    state.chords.forEach(c => {
+      if (c.sys != null && c.pos != null && c.text != null) {
+        chords.push({ sys: c.sys, pos: c.pos, text: c.text });
+      }
+    });
+  }
+
+  // ✅ 9. Slot activo inicial + render
+  const firstSlot = document.querySelector(".slot");
+  if (firstSlot) {
+    activateSlot(firstSlot);
+  }
+  updateGhostClasses();
+  renderAllChords();
+  autoSave();
+}
+
+
+
+function toggleMenu() {
+    const menu = document.getElementById("menuContent");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+
+function closeMenu() {
+    const menu = document.getElementById("menuContent");
+    menu.style.display = "none";
+}
+
+
+
+// cerrar el menú si se hace clic afuera
+document.addEventListener("click", (e) => {
+    const menu = document.getElementById("menuContent");
+    const button = document.querySelector(".menu-button");
+    if (!menu.contains(e.target) && !button.contains(e.target)) {
+        menu.style.display = "none";
+    }
+});
+
+
+function deleteActiveSlot() {
+    if (!activeSlot) return;
+
+    const oldValue = activeSlot.textContent;
+    if (oldValue === "-") return; // ya vacío
+
+    // guardar en historial por si quieres deshacer
+    history.push({ type: "note", slot: activeSlot, oldValue });
+
+    activeSlot.textContent = "-";
+    // playNote(parseInt(activeSlot.dataset.string, 10), 0); // ❌ eliminar sonido
+    autoSave();
+}
+
+
+function toggleGhost() {
+  if (!activeSlot) return;
+  const text = activeSlot.textContent.trim();
+  
+  // Si está vacío o ya no es numérico (X, etc.), salir
+  if (text === "-" || text === "" || text === "X") return;
+
+  // Detectar si ya está entre paréntesis
+  const isGhost = /^\s*\(\s*\d+\s*\)\s*$/.test(text);
+  
+  let newValue;
+  if (isGhost) {
+    // Quitar paréntesis y dejar solo el número
+    newValue = text.replace(/[()]/g, "").trim();
+  } else {
+    // Validar que sea un número (sin paréntesis aún)
+    const clean = text.replace(/[^\d]/g, "");
+    const num = parseInt(clean, 10);
+    if (isNaN(num)) return;
+    newValue = `(${num})`;
+  }
+
+  // Guardar en historial para deshacer
+  history.push({
+    type: "note",
+    slot: activeSlot,
+    oldValue: activeSlot.textContent
+  });
+
+  activeSlot.textContent = newValue;
+  
+  // ✅ Agregar/quitar clase .ghost según estado
+  if (isGhost) {
+    activeSlot.classList.remove("ghost");
+  } else {
+    activeSlot.classList.add("ghost");
+  }
+
+  autoSave();
+}
+
+
+
+
+
+let transposeAmount = 0;
+
+function openTranspose() {
+    transposeAmount = 0;
+    document.getElementById("transposeValue").textContent = "0";
+    document.getElementById("transposeOverlay").style.display = "flex";
+}
+
+function closeTranspose() {
+    document.getElementById("transposeOverlay").style.display = "none";
+}
+
+function changeTranspose(delta) {
+    transposeAmount += delta;
+    if (transposeAmount > 11) transposeAmount = 11;
+    if (transposeAmount < -11) transposeAmount = -11;
+    document.getElementById("transposeValue").textContent = transposeAmount;
+}
+
+
+
+
+function applyTranspose() {
+    const slots = document.querySelectorAll(".slot");
+    const changes = [];
+
+    // 1️⃣ validar primero
+    for (const slot of slots) {
+        const txt = slot.textContent.trim();
+        if (txt === "-" || txt === "") continue;
+
+        const fret = parseInt(txt, 10);
+        if (isNaN(fret)) continue;
+
+        const newFret = fret + transposeAmount;
+
+        if (newFret < 0) {
+            alert("Error: hay notas que quedarían en cuerda al aire (menor que 0)");
+            return;
+        }
+
+        if (newFret > 23) {
+            alert("Error: hay notas que exceden el diapasón (mayor que 23)");
+            return;
+        }
+
+        changes.push({ slot, newFret });
+    }
+
+    // 2️⃣ aplicar cambios
+    changes.forEach(c => {
+        c.slot.textContent = c.newFret;
+    });
+
+    autoSave();
+    closeTranspose();
+}
+
+
+function createLigado() {
+    if (!activeSlot) return;
+
+    const sys = +activeSlot.dataset.system;
+    const string = +activeSlot.dataset.string;
+    const startPos = +activeSlot.dataset.pos;
+
+    // 🔴 si ya hay un ligado que empieza acá → borrarlo
+    const existente = findLigadoStartingAt(sys, startPos, string);
+    if (existente) {
+        existente.el.remove();
+        arcs = arcs.filter(a => a !== existente);
+        autoSave();
+        return;
+    }
+
+    // buscar la siguiente nota válida en la misma cuerda
+    for (let p = startPos + 1; p < SLOTS; p++) {
+        const slot = document.querySelector(
+            `.slot[data-system="${sys}"][data-string="${string}"][data-pos="${p}"]`
+        );
+
+        if (!slot) continue;
+
+        const val = slot.textContent.trim();
+        if (val !== "-" && val !== "") {
+            drawArc(sys, startPos, p, {
+                type: "ligado",
+                string
+            });
+            autoSave();
+            return;
+        }
+    }
+}
+
+
+
+
+function findLigadoStartingAt(sys, pos, string) {
+    return arcs.find(a =>
+        a.sys === sys &&
+        a.from === pos &&
+        a.string === string &&
+        a.type === "ligado"
+    );
+}
+
+
+function createSlide() {
+  console.log("createSlide() llamada", { activeSlot });
+  if (!activeSlot) return;
+  const sys = +activeSlot.dataset.system;
+  const string = +activeSlot.dataset.string;
+  const startPos = +activeSlot.dataset.pos;
+
+  // 🔴 si ya hay un slide que empieza acá → borrarlo
+  const existente = arcs.find(a =>
+    a.sys === sys &&
+    a.from === startPos &&
+    a.string === string &&
+    a.type === "slide"
+  );
+  if (existente) {
+    existente.el.remove();
+    arcs = arcs.filter(a => a !== existente);
+    autoSave();
+    return;
+  }
+
+  // buscar la siguiente nota válida en la misma cuerda
+  for (let p = startPos + 1; p < SLOTS; p++) {
+    const slot = document.querySelector(
+      `.slot[data-system="${sys}"][data-string="${string}"][data-pos="${p}"]`
+    );
+    if (!slot) continue;
+    const val = slot.textContent.trim();
+    if (val !== "-" && val !== "") {
+      // ✅ Usar cleanFret para interpretar (5) como 5
+      const fretInicial = cleanFret(activeSlot.textContent);
+      const fretFinal   = cleanFret(slot.textContent);
+      if (fretInicial === null || fretFinal === null) {
+        console.warn("⚠️ createSlide: valor no numérico", activeSlot.textContent, slot.textContent);
+        return;
+      }
+      // ✅ direcciones: / = ascendente (5→7), \ = descendente (7→5)
+      const direction = fretFinal > fretInicial ? "up" : "down";
+      drawArc(sys, startPos, p, {
+        type: "slide",
+        string,
+        direction
+      });
+      autoSave();
+      return;
+    }
+  }
+}
+
+
+function updateGhostClasses() {
+  document.querySelectorAll(".slot").forEach(slot => {
+    const isGhost = /^\s*\(\s*\d+\s*\)\s*$/.test(slot.textContent.trim());
+    slot.classList.toggle("ghost", isGhost);
+  });
+}
+
+// ✅ Renderiza los acordes de un sistema dado
+function renderChords(sys) {
+  const systemEl = document.querySelector(`.system[data-system="${sys}"]`);
+  if (!systemEl) return;
+
+  const chordLayer = systemEl.querySelector(".chord-layer");
+  if (!chordLayer) return;
+
+  // Limpiar capa
+  chordLayer.innerHTML = "";
+
+  // Filtrar acordes del sistema
+  const chordsInSys = chords.filter(c => c.sys === sys);
+  chordsInSys.forEach(c => {
+    const slot = systemEl.querySelector(`.slot[data-pos="${c.pos}"]`);
+    if (!slot) return;
+
+    const chordEl = document.createElement("span");
+    chordEl.className = "chord";
+    chordEl.textContent = c.text;
+    chordEl.style.left = slot.offsetLeft + "px"; // ✅ alineación izquierda
+    chordEl.style.top = "0";
+    // clic → editar
+    chordEl.onclick = (e) => {
+      e.stopPropagation();
+      openChordEditor(c.sys, c.pos, c.text);
+    };
+    chordLayer.appendChild(chordEl);
+  });
+}
+
+// ✅ Renderiza todos los sistemas
+function renderAllChords() {
+  for (let sys = 0; sys < SYSTEMS; sys++) {
+    renderChords(sys);
+  }
+}
+
+
+// ✅ Estado del editor
+let currentChordSys = 0;
+let currentChordPos = 0;
+let currentRoot = "C";
+let currentAcc = "";
+let currentType = "";
+let bassMode = false;        
+let bassRoot = "";          
+let bassAcc = "";           
+
+// ✅ Datos para el teclado
+const notes = ["A", "B", "C", "D", "E", "F", "G"];
+const accidentals = [
+  { label: "♮", value: "" },
+  { label: "♭", value: "b" },
+  { label: "♯", value: "#" }
+];
+
+
+
+
+// ✅ Toggle modo inversión
+function toggleBassMode() {
+    bassMode = !bassMode;
+    const btn = document.getElementById("bassModeBtn");
+    btn.classList.toggle("active", bassMode);
+
+    // Mostrar/ocultar elementos
+    document.getElementById("typeButtons").style.display = bassMode ? "none" : "flex";
+    const customInputDiv = document.getElementById("customTypeInput")?.closest("div");
+    if (customInputDiv) {
+        customInputDiv.style.display = bassMode ? "none" : "block";
+    }
+
+    // Aplicar clase visual al contenedor
+    const modalContent = document.getElementById("chordModal").querySelector("div[style*='background:white']");
+    if (modalContent) {
+        modalContent.classList.toggle("bass-mode", bassMode);
+    }
+
+    // ✅ Mostrar/ocultar botones de acción
+    const cancelBtn = document.getElementById("cancelBtn");
+    const deleteBassBtn = document.getElementById("deleteBassBtn");
+    if (cancelBtn) cancelBtn.style.display = bassMode ? "none" : "inline-block";
+    if (deleteBassBtn) deleteBassBtn.style.display = bassMode ? "inline-block" : "none";
+
+    // Renderizar UI y preview
+    renderNoteButtons();
+    renderAccidentalButtons();
+    updateChordPreview();
+}
+
+
+
+
+
+// ✅ Abrir editor — resetea siempre el modo inversión al iniciar
+function openChordEditor(sys, pos, currentText = "") {
+    if (!activeSlot && sys == null) {
+        alert("Seleccioná un slot primero.");
+        return;
+    }
+
+    // 🔑 1. Establecer sistema y posición
+    currentChordSys = sys ?? +activeSlot.dataset.system;
+    currentChordPos = pos ?? +activeSlot.dataset.pos;
+
+    // 🔑 2. Resetear estado previo — SIEMPRE modo normal al abrir
+    bassMode = false;     // ✅ Nunca entrar automáticamente en modo inversión
+    currentRoot = "C";
+    currentAcc = "";
+    currentType = "";
+    bassRoot = "";        // ✅ Sí guardamos el bajo, pero no activamos el modo
+    bassAcc = "";
+
+    // 🔑 3. Parsear acorde actual si existe
+    if (currentText) {
+        const parts = currentText.split("/");
+        const baseChord = parts[0]; // ej: "G#7(13)b9"
+        const bassPart = parts[1];  // ej: "F", undefined
+
+        // 📌 Extraer raíz, alteración y resto del acorde base
+        const baseMatch = baseChord.match(/^([A-G])([#b]?)(.*)$/);
+        if (baseMatch) {
+            currentRoot = baseMatch[1];
+            currentAcc = baseMatch[2] || "";
+            const rawType = baseMatch[3] || "";
+
+            // 📌 Lista de tipos predefinidos (coincidencia EXACTA)
+            const predefinedTypes = [
+                "maj7", "6", "maj7(9)", "maj7(#11)",
+                "m", "m7", "m6", "m7(9)",
+                "7", "7(9)", "7b9", "7(13)", "7(#5)", "7(#9)",
+                "m7b5", "dim7"
+            ];
+
+            if (predefinedTypes.includes(rawType)) {
+                currentType = rawType;
+            } else {
+                currentType = "";
+                // ✅ Cargar tipo personalizado en "Otro"
+                const customInput = document.getElementById("customTypeInput");
+                if (customInput) customInput.value = rawType;
+            }
+        }
+
+        // 📌 Parsear bajo si existe — GUARDAR pero NO ACTIVAR modo
+        if (bassPart) {
+            const bassMatch = bassPart.match(/^([A-G])([#b]?)$/);
+            if (bassMatch) {
+                bassRoot = bassMatch[1];
+                bassAcc = bassMatch[2] || "";
+                // ❌ NO hacer: bassMode = true;
+            }
+        }
+    }
+
+    // 🔑 4. Asegurar UI en modo normal
+    const bassModeBtn = document.getElementById("bassModeBtn");
+    if (bassModeBtn) bassModeBtn.classList.remove("active");
+
+    const typeButtonsDiv = document.getElementById("typeButtons");
+    const customInputDiv = document.getElementById("customTypeInput")?.closest("div");
+    const modalContent = document.getElementById("chordModal")?.querySelector("div[style*='background:white']");
+
+    if (typeButtonsDiv) typeButtonsDiv.style.display = "flex";
+    if (customInputDiv) customInputDiv.style.display = "block";
+    if (modalContent) modalContent.classList.remove("bass-mode");
+
+    // 🔑 4.5. Configurar visibilidad de botones de acción (Aceptar / Cancelar / Borrar bajo)
+    const cancelBtn = document.getElementById("cancelBtn");
+    const deleteBassBtn = document.getElementById("deleteBassBtn");
+
+    if (cancelBtn) cancelBtn.style.display = "inline-block";   // ✅ Mostrar Cancelar (modo normal)
+    if (deleteBassBtn) deleteBassBtn.style.display = "none";   // ❌ Ocultar Borrar bajo (modo normal)
+
+    // 🔑 5. Renderizar botones según estado
+    renderNoteButtons();
+    renderAccidentalButtons();
+    renderTypeButtons();
+
+    // 🔑 6. Limpiar "Otro" si usamos tipo predefinido
+    const customInput = document.getElementById("customTypeInput");
+    if (customInput && currentType !== "") {
+        customInput.value = "";
+    }
+
+    // 🔑 7. Actualizar preview → ahora mostrará el bajo (si existe), gracias a updateChordPreview corregida
+    updateChordPreview();
+
+    // 🔑 8. Mostrar modal
+    document.getElementById("chordModal").style.display = "flex";
+}
+
+
+
+
+// ✅ Cerrar modal
+function closeChordModal() {
+  // ✅ Salir del modo inversión al cerrar
+  bassMode = false;
+  document.getElementById("bassModeBtn")?.classList.remove("active");
+  
+  // Ocultar modal
+  document.getElementById("chordModal").style.display = "none";
+}
+
+// ✅ Renderizar botones de nota (modo inversión compatible)
+function renderNoteButtons() {
+  const container = document.getElementById("noteButtons");
+  container.innerHTML = "";
+  notes.forEach(note => {
+    const isActive = bassMode ? (note === bassRoot) : (note === currentRoot);
+    const btn = document.createElement("button");
+    btn.className = "chord-btn" + (isActive ? " active" : "");
+    btn.textContent = note;
+    btn.onclick = () => {
+      if (bassMode) {
+        bassRoot = note;
+      } else {
+        currentRoot = note;
+      }
+      renderNoteButtons();
+      renderAccidentalButtons(); // por si el cambio afecta alteración activa
+      updateChordPreview();
+    };
+    container.appendChild(btn);
+  });
+}
+
+// ✅ Renderizar botones de alteración (modo inversión compatible)
+function renderAccidentalButtons() {
+  const container = document.getElementById("accidentalButtons");
+  container.innerHTML = "";
+  accidentals.forEach(acc => {
+    const isActive = bassMode ? (acc.value === bassAcc) : (acc.value === currentAcc);
+    const btn = document.createElement("button");
+    btn.className = "chord-btn" + (isActive ? " active" : "");
+    btn.textContent = acc.label;
+    btn.onclick = () => {
+      if (bassMode) {
+        bassAcc = acc.value;
+      } else {
+        currentAcc = acc.value;
+      }
+      renderAccidentalButtons();
+      renderNoteButtons(); // por coherencia visual (raro que afecte, pero seguro)
+      updateChordPreview();
+    };
+    container.appendChild(btn);
+  });
+}
+
+
+// ✅ Renderizar botones de tipo — con filas explícitas
+function renderTypeButtons() {
+  const container = document.getElementById("typeButtons");
+  container.innerHTML = "";
+
+  // Definir filas tal como las pediste
+const rows = [
+  [
+    { label: "maj7", value: "maj7" },
+    { label: "6", value: "6" },
+    { label: "maj7(9)", value: "maj7(9)" },
+    { label: "maj7(#11)", value: "maj7(#11)" }
+  ],
+  [
+    { label: "m", value: "m" },
+    { label: "m7", value: "m7" },
+    { label: "m6", value: "m6" },
+    { label: "m7(9)", value: "m7(9)" }
+  ],
+  [
+    { label: "7", value: "7" },
+    { label: "7(9)", value: "7(9)" },
+    { label: "7b9", value: "7b9" },
+    { label: "7(13)", value: "7(13)" },
+    { label: "7(#5)", value: "7(#5)" },
+    { label: "7(#9)", value: "7(#9)" }   // ✅ nuevo
+  ],
+  [
+    { label: "m7b5", value: "m7b5" },
+    { label: "dim7", value: "dim7" }
+  ]
+];
+
+  rows.forEach(row => {
+    const rowDiv = document.createElement("div");
+    rowDiv.style.display = "flex";
+    rowDiv.style.gap = "4px";
+    rowDiv.style.marginBottom = "4px"; // espacio entre filas
+
+    row.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "chord-btn" + (t.value === currentType ? " active" : "");
+      btn.textContent = t.label;
+      btn.style.flex = "1"; // igual ancho en la fila
+    btn.onclick = () => {
+      currentType = t.value;
+
+      // ✅ 1. Limpiar el campo "Otro"
+      const customInput = document.getElementById("customTypeInput");
+      if (customInput) customInput.value = "";
+
+      // ✅ 2. Re-renderizar botones (para activar/desactivar visualmente)
+      renderTypeButtons();
+
+      // ✅ 3. Forzar preview con currentType (no con el input vacío)
+      updateChordPreview();
+    };
+      rowDiv.appendChild(btn);
+    });
+
+    container.appendChild(rowDiv);
+  });
+}
+
+// ✅ Actualiza la vista previa: muestra el acorde completo (con bajo si existe), sin depender de bassMode
+function updateChordPreview() {
+    const customInput = document.getElementById("customTypeInput");
+    const customValue = customInput?.value?.trim() || "";
+    const previewType = customValue !== "" ? customValue : currentType;
+
+    // Construir base del acorde
+    let text = currentRoot + currentAcc + previewType;
+
+    // ✅ Mostrar bajo SI EXISTE (bassRoot no vacío), independientemente de bassMode
+    if (bassRoot) {
+        text += "/" + bassRoot + bassAcc;
+    }
+
+    document.getElementById("chordPreview").textContent = text || currentRoot;
+}
+
+
+
+// ✅ Aplicar acorde (con soporte para modo inversión y tipo personalizado)
+function applyChord() {
+    const customInput = document.getElementById("customTypeInput");
+    const finalType = customInput?.value.trim() || currentType;
+
+    // Construir base del acorde
+    let fullText = currentRoot + currentAcc + finalType;
+
+    // Añadir bajo si hay bajo seleccionado (incluso si NO estamos en bassMode ahora)
+    if (bassRoot) {
+        fullText += "/" + bassRoot + bassAcc;
+    }
+
+    // Si queda vacío → borrar
+    if (!fullText.trim()) {
+        deleteChord();
+        return;
+    }
+
+    // Guardar o actualizar
+    const idx = chords.findIndex(c =>
+        c.sys === currentChordSys && c.pos === currentChordPos
+    );
+    if (idx >= 0) {
+        chords[idx].text = fullText;
+    } else {
+        chords.push({ sys: currentChordSys, pos: currentChordPos, text: fullText });
+    }
+    renderAllChords();
+    autoSave();
+
+    // ✅ COMPORTAMIENTO NUEVO: si estábamos en modo inversión → cerrar y REABRIR
+    const wasInBassMode = bassMode;
+
+    // Cerrar modal en cualquier caso
+    document.getElementById("chordModal").style.display = "none";
+
+    // Si estábamos en modo inversión → reabrir inmediatamente
+    if (wasInBassMode) {
+        setTimeout(() => {
+            // Buscar el slot actual para obtener el acorde recién guardado
+            const slot = document.querySelector(
+                `.slot[data-system="${currentChordSys}"][data-pos="${currentChordPos}"]`
+            );
+            const updatedText = slot?.dataset.text || fullText;
+            openChordEditor(currentChordSys, currentChordPos, updatedText);
+        }, 10);
+    }
+
+    // Resetear estado de inversión (por coherencia)
+    bassMode = false;
+}
+
+
+
+// ✅ Borrar acorde
+function deleteChord() {
+  chords = chords.filter(c =>
+    !(c.sys === currentChordSys && c.pos === currentChordPos)
+  );
+  renderAllChords();
+  autoSave();
+  closeChordModal();
+}
+
+// ✅ Borrar SOLO el bajo, mantener el acorde base
+function deleteBassOnly() {
+  bassRoot = "";
+  bassAcc = "";
+  renderNoteButtons();
+  renderAccidentalButtons();
+  updateChordPreview();
+}
+
+
+
+
+// ✅ Soporte para click en acorde existente
+// (ya está en renderChords: chordEl.onclick → openChordEditor)
+
+
+// ✅ Actualiza el preview en tiempo real al escribir en "Otro" — con validación de "/"
+function updatePreviewFromCustom(value) {
+    // Validación: si el usuario intenta escribir "/", mostrar mensaje y no permitirlo
+    if (value.includes("/")) {
+        alert('No se puede utilizar "/" en este campo. La barra se destina para indicar la inversión del acorde (bajo).');
+        // Eliminar todas las barras del valor
+        value = value.replace(/\//g, "");
+        // Actualizar el campo de texto con el valor limpio
+        const customInput = document.getElementById("customTypeInput");
+        if (customInput) {
+            customInput.value = value;
+        }
+    }
+
+    // Desactivar todos los botones de tipo visualmente
+    document.querySelectorAll("#typeButtons .chord-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    // Construir el texto de la vista previa usando el valor limpio
+    const previewText = currentRoot + currentAcc + (value || currentType);
+    document.getElementById("chordPreview").textContent = previewText || currentRoot;
+}
+
+
+// ✅ Devuelve cantidad de sistemas actualmente visibles
+function getVisibleSystems() {
+  return Array.from(document.querySelectorAll(".system"))
+    .filter(el => el.style.display !== "none")
+    .length;
+}
+
+// ✅ Muestra el siguiente sistema oculto (si existe)
+function addSystem() {
+  const visible = getVisibleSystems();
+  if (visible >= SYSTEMS) {
+    // ✅ Necesitamos crear un sistema nuevo (no solo mostrar)
+    const newSysIndex = SYSTEMS; // será el próximo índice
+    const newSystem = createSystem(newSysIndex);
+    // ✅ Añadir al último .tab-container existente
+    const lastTab = getLastTabContainer();
+    if (lastTab) {
+      lastTab.appendChild(newSystem);
+      SYSTEMS++; // ✅ aumentar el conteo global
+    } else {
+      console.error("❌ No se encontró .tab-container para añadir sistema");
+      return;
+    }
+  } else {
+    // ✅ Mostrar un sistema pre-existente (0–5)
+    const nextSysEl = document.querySelector(`.system[data-system="${visible}"]`);
+    if (nextSysEl) {
+      nextSysEl.style.display = "flex";
+    }
+  }
+
+  // ✅ Scroll al primer slot del nuevo sistema visible
+  const newSysIndex = visible;
+  const firstSlot = document.querySelector(
+    `.system[data-system="${newSysIndex}"]:not([style*="none"]) .slot[data-string="5"][data-pos="0"]`
+  );
+  if (firstSlot) {
+    ensureSlotVisible(firstSlot);
+  }
+
+  // ✅ Intentar paginación
+  checkAndSplitPages();
+  updatePageTitles();
+}
+
+// ✅ Borra el sistema del slot activo (con confirmación si no está vacío)
+function removeActiveSystem() {
+  if (!activeSlot) {
+    alert("Seleccioná un slot primero.");
+    return;
+  }
+
+  const currentSys = +activeSlot.dataset.system;
+  const systemEl = document.querySelector(`.system[data-system="${currentSys}"]`);
+  if (!systemEl || systemEl.style.display === "none") return;
+
+  // ✅ Verificar si el sistema tiene contenido
+  const hasContent = [
+    ...systemEl.querySelectorAll(".slot")
+  ].some(s => s.textContent !== "-") ||
+    chords.some(c => c.sys === currentSys) ||
+    arcs.some(a => a.sys === currentSys);
+
+  if (hasContent && !confirm("⚠️ El sistema no está vacío.\n¿Borrarlo de todos modos?")) {
+    return;
+  }
+
+  // ✅ 1. Eliminar acordes y arcos del sistema
+  chords = chords.filter(c => c.sys !== currentSys);
+  arcs = arcs.filter(a => a.sys !== currentSys).map(a => {
+    // Re-indexar sistemas posteriores
+    if (a.sys > currentSys) a.sys--;
+    return a;
+  });
+
+  // ✅ 2. Re-indexar acordes posteriores
+  chords = chords.map(c => c.sys > currentSys ? { ...c, sys: c.sys - 1 } : c);
+
+  // ✅ 3. Ocultar sistema (no eliminar del DOM → compatibilidad)
+  systemEl.style.display = "none";
+
+  // ✅ 4. Re-indexar visual: mover todos los sistemas posteriores -1 visualmente
+  for (let s = currentSys + 1; s < SYSTEMS; s++) {
+    const el = document.querySelector(`.system[data-system="${s}"]`);
+    if (el && el.style.display !== "none") {
+      el.dataset.system = s - 1;
+      el.querySelectorAll(".slot").forEach(slot => slot.dataset.system = s - 1);
+    }
+  }
+
+  // ✅ 5. Actualizar DOM de arcos y acordes (re-renderizar)
+  arcs.forEach(a => a.el?.remove());
+  arcs = []; // reconstruiremos desde cero abajo
+  // ⚠️ Re-dibujar arcos manualmente (no hay función genérica, así que lo hacemos aquí)
+  // Pero mejor: usar lo que ya tienes → `loadState(buildState())` sería sobrekill.
+  // En su lugar: actualizamos los `data-system` en el DOM y re-renderizamos
+  chords.forEach(c => {
+    if (c.sys > currentSys) c.sys--;
+  });
+
+  // ✅ 6. Activar primer slot disponible (del sistema anterior o 0)
+  let newSys = Math.max(0, currentSys - 1);
+  let newActive = document.querySelector(
+    `.system[data-system="${newSys}"]:not([style*="none"]) .slot[data-string="5"][data-pos="0"]`
+  );
+  if (!newActive) newActive = document.querySelector('.slot[data-system="0"]');
+  if (newActive) activateSlot(newActive);
+
+  // ✅ 7. Actualizar renderizado y autosave
+  renderAllChords();
+  autoSave();
+
+  // ✅ 8. Verificar si alguna página quedó vacía → fusionar
+  checkAndMergePages();
+
+  // ✅ 9. Actualizar títulos
+  updatePageTitles();
+}
+
+// ✅ Actualiza los títulos con formato: "Título (hoja X de Y)"
+function updatePageTitles() {
+  const tabContainers = document.querySelectorAll(".tab-container");
+  const totalPages = tabContainers.length;
+  const titleInput = document.querySelector(".title");
+  if (!titleInput) return;
+
+  const baseTitle = titleInput.value
+    .replace(/\s*\(hoja\s+\d+\s+de\s+\d+\)/gi, "")
+    .trim() || "Partitura";
+
+  if (totalPages > 1) {
+    titleInput.value = `${baseTitle} (hoja 1 de ${totalPages})`;
+    // Si hay múltiples contenedores, replicar título en futuras páginas (opcional)
+  } else {
+    titleInput.value = baseTitle;
+  }
+}
+
+
+// ✅ Verifica si necesita dividir en páginas y lo hace
+function checkAndSplitPages() {
+  // ✅ Solo una página por ahora — dividimos mediante múltiples .tab-container dentro de UNA .page
+  const page = document.querySelector(".page");
+  if (!page) return;
+
+  const MAX_HEIGHT = 1000; // px
+  if (page.scrollHeight <= MAX_HEIGHT) return;
+
+  const tabContainers = document.querySelectorAll(".tab-container");
+  const lastTab = tabContainers[tabContainers.length - 1];
+  if (!lastTab) return;
+
+  // Buscar primer sistema que, al estar visible, excede la altura
+  const systems = Array.from(lastTab.querySelectorAll(".system"));
+  let cumulativeHeight = 0;
+  let splitIndex = -1;
+
+  for (let i = 0; i < systems.length; i++) {
+    const sys = systems[i];
+    if (sys.style.display === "none") continue;
+    const h = sys.offsetHeight + 8;
+    if (cumulativeHeight + h > MAX_HEIGHT) {
+      splitIndex = i;
+      break;
+    }
+    cumulativeHeight += h;
+  }
+
+  if (splitIndex <= 0 || splitIndex >= systems.length) return;
+
+  // ✅ Crear nuevo .tab-container dentro de la misma .page
+  const newTab = document.createElement("div");
+  newTab.className = "tab-container";
+  newTab.dataset.page = tabContainers.length + 1;
+
+  // Mover sistemas desde splitIndex en adelante
+  for (let i = splitIndex; i < systems.length; i++) {
+    const sys = systems[i];
+    if (sys.style.display !== "none") {
+      newTab.appendChild(sys);
+      // Reasignar system index para que sea consecutivo dentro del nuevo contenedor
+      const oldSys = +sys.dataset.system;
+      const newSys = i - splitIndex;
+      sys.dataset.system = newSys;
+      sys.querySelectorAll(".slot").forEach(s => s.dataset.system = newSys);
+      chords = chords.map(c => c.sys === oldSys ? { ...c, sys: newSys } : c);
+      arcs = arcs.map(a => a.sys === oldSys ? { ...a, sys: newSys } : a);
+    }
+  }
+
+  // ✅ Insertar nuevo .tab-container después del último
+  lastTab.parentNode.insertBefore(newTab, lastTab.nextSibling);
+
+  // ✅ Forzar re-render de acordes (por cambio de system index)
+  renderAllChords();
+
+  updatePageTitles();
+}
+
+// ✅ Verifica si puede fusionar páginas (útil tras borrar sistema)
+function checkAndMergePages() {
+  const pages = document.querySelectorAll(".page");
+  if (pages.length <= 1) return;
+
+  // Si la última página no tiene sistemas visibles → eliminarla
+  const lastPage = pages[pages.length - 1];
+  const lastTab = lastPage.querySelector("#tab");
+  const visibleSystemsInLast = lastTab ?
+    lastTab.querySelectorAll(".system:not([style*='none'])").length : 0;
+
+  if (visibleSystemsInLast === 0) {
+    lastPage.remove();
+    // Reasignar system index en la página anterior para que siga 0,1,2...
+    const prevPage = document.querySelector(".page:last-of-type");
+    const prevTab = prevPage?.querySelector("#tab");
+    if (prevTab) {
+      const systems = prevTab.querySelectorAll(".system:not([style*='none'])");
+      systems.forEach((sys, idx) => {
+        sys.dataset.system = idx;
+        sys.querySelectorAll(".slot").forEach(s => s.dataset.system = idx);
+        chords = chords.map(c => c.sys >= idx ? { ...c, sys: idx } : c);
+        arcs = arcs.map(a => a.sys >= idx ? { ...a, sys: idx } : a);
+      });
+    }
+  }
+
+  updatePageTitles();
+}
+
+
+
+// Registrar y actualizar Service Worker para soporte offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registrado con éxito:', registration.scope);
+        
+        // Forzar actualización inmediata
+        registration.update();
+        
+        // Verificar actualizaciones cada hora
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000);
+        
+        // Escuchar mensajes del Service Worker
+        navigator.serviceWorker.addEventListener('message', event => {
+          console.log('Mensaje del SW:', event.data);
+        });
+      })
+      .catch(error => {
+        console.log('Error al registrar ServiceWorker:', error);
+      });
+  });
+}
+
+
+
+</script>
+
+
+<!-- ===== TRANSPOSE DIALOG ===== -->
+<div id="transposeOverlay" style="
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+">
+    <div style="
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        width: 260px;
+        text-align: center;
+        font-family: monospace;
+    ">
+        <div style="font-size:18px; margin-bottom:10px;">
+            Transposición
+        </div>
+
+        <div style="
+            display:flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        ">
+            <button onclick="changeTranspose(-1)">▼</button>
+            <div id="transposeValue" style="font-size:22px; width:50px;">0</div>
+            <button onclick="changeTranspose(1)">▲</button>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button onclick="applyTranspose()">Aceptar</button>
+            <button onclick="closeTranspose()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Espaciador final para asegurar visibilidad del último sistema -->
+<div style="height: 360px; pointer-events: none;"></div>
+
+
+<!-- ✅ MODAL DE ACORDES — INICIO -->
+<div id="chordModal" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+">
+  <div style="
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  ">
+
+    <div id="chordPreview" style="
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin: 8px 0 16px;
+      min-height: 28px;
+      background: #f8f8f8;
+      padding: 4px 8px;
+      border-radius: 4px;
+    ">C</div>
+
+    <!-- Notas -->
+    <div style="margin-bottom: 8px;">
+      <div id="noteButtons" style="display: flex; gap: 4px; width: 100%;"></div>
+    </div>
+
+    <!-- Alteraciones + Inversiones -->
+    <div style="display: flex; gap: 4px; width: 100%; margin-bottom: 8px;">
+      <div id="accidentalButtons" style="flex: 1; display: flex; gap: 4px;"></div>
+      <button id="bassModeBtn" class="chord-btn" onclick="toggleBassMode()" style="flex: 0 0 auto; min-width: 92px; font-size: 12px;">
+        inversión
+      </button>
+    </div>
+
+    <!-- Tipos -->
+    <div>
+      <div style="font-weight: bold; margin-bottom: 4px;">Tipo:</div>
+      <div id="typeButtons" style="display: flex; flex-direction: column; gap: 4px;"></div>
+    </div>
+
+    <!-- ✅ NUEVO: Otro tipo (libre) -->
+    <div style="margin-top: 12px; font-size: 13px;">
+      <label>Otro (escriba su tipo aquí, ej: b7b13#5):</label>
+      <input
+      id="customTypeInput"
+      type="text"
+      placeholder=""
+      style="width:100%; padding:6px; margin-top:4px; border:1px solid #ccc; border-radius:4px;"
+      oninput="updatePreviewFromCustom(this.value)"
+      />
+    </div>
+
+    <div style="margin-top: 16px; display: flex; gap: 6px;">
+      <button onclick="applyChord()" style="flex:1; background:#007bff; color:white; border:none; padding:6px; border-radius:4px;">Aceptar</button>
+      <button id="deleteBassBtn" onclick="deleteBassOnly()" style="flex:1; background:#6c757d; color:white; border:none; padding:6px; border-radius:4px; display:none;">Borrar bajo</button>
+      <button id="cancelBtn" onclick="closeChordModal()" style="flex:1; background:#dc3545; color:white; border:none; padding:6px; border-radius:4px;">Cancelar</button>
+    </div>
+  </div>
+</div>
+<!-- ✅ MODAL DE ACORDES — FIN -->
+
+
+
+
+</body>
+
+</html>
+

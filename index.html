@@ -236,7 +236,7 @@ background: #f0f0f0;
 
     .system {
         gap: 3px;
-        margin-bottom: 30px;
+        margin-bottom: 60px;
         page-break-inside: avoid;
         break-inside: avoid;
     }
@@ -248,20 +248,63 @@ background: #f0f0f0;
         color: #fff;
     }
 
-    .title { font-size: 20px; margin-bottom: 6px; }
+    .title { font-size: 20px; margin-bottom: 30px; }
 
     .arc-layer { visibility: visible !important; }
     svg { overflow: visible !important; }
     input, button { pointer-events: none; }
+    
+    /* ===== ✅ NUEVAS REGLAS PARA PAGINACIÓN ===== */
+    /* Asegurar que los títulos de página se impriman */
+  .page-title {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      color: #000 !important;
+      background: transparent !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      font-size: 20px !important;
+      margin-bottom: 40px !important;
+      margin-top: 0 !important;  /* ← Cero arriba */
+      padding-top: 30px !important;  /* ← Padding en lugar de margin */
+      page-break-before: always !important;
+      break-before: always !important;
+  }
+    
+    /* Espaciado entre páginas en impresión */
+    .tab-container {
+        page-break-after: always;
+    }
+    
+    .tab-container:last-child {
+        page-break-after: auto;
+    }
+    
+    /* Asegurar que los sistemas no se dividan entre páginas */
+    .system {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+  }
+
 }
+
+
 
 /* ===== MENÚ ⋮ ===== */
 .menu-wrap {
     position: fixed;
     top: 10px;
     right: 10px;
-    z-index: 1000;
+    z-index: 9999;  /* ← MÁS ALTO */
     font-family: monospace;
+    pointer-events: auto;  /* ← Asegurar que sea clickeable */
+}
+
+/* En vista previa, ocultar el menú */
+body.preview-mode .menu-wrap {
+    display: none !important;
 }
 
 .menu-button {
@@ -444,6 +487,134 @@ body.preview-mode .page {
 }
 
 
+/* ✅ Resaltado del sistema actual — solo en pantalla */
+@media screen {
+    .system.current {
+        box-shadow: inset 0 0 0 2px rgba(70, 130, 180, 0.3);
+        background-color: rgba(240, 248, 255, 0.2);
+        border-radius: 4px;
+    }
+}
+/* ✅ Asegurar que no se imprima */
+@media print {
+    .system.current {
+        box-shadow: none !important;
+        background-color: transparent !important;
+    }
+}
+
+
+/* ===== TÍTULO DE PÁGINA ===== */
+.page-title {
+    font-size: 22px;
+    border: none;
+    outline: none;
+    margin-bottom: 50px;
+    /* ✅ NUEVO: Permitir que el título se muestre completo */
+    width: 100%;
+    white-space: nowrap; /* Mantener en una línea */
+    overflow: visible !important; /* ✅ CLAVE: NO recortar */
+    text-overflow: clip !important; /* No usar ellipsis */
+    position: relative;
+    z-index: 10; /* Asegurar que esté por encima */
+    background-color: white; /* Fondo para que no se superponga */
+    padding: 10px 5px;
+    margin-top: 0;
+    margin-bottom: 40px !important;
+    box-sizing: border-box;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    page-break-before: always !important;
+    break-before: always !important;
+    
+    /* ✅ Forzar que no tenga límites de ancho */
+    min-width: 100%; /* Al menos el ancho del contenedor */
+    max-width: none !important; /* Sin límite máximo */
+}
+
+/* ✅ Asegurar que el contenedor padre NO RECORTE */
+.tab-container {
+    overflow: visible !important; /* ✅ CLAVE: Permitir desbordamiento */
+    position: relative;
+}
+
+/* ✅ También el .page debe permitir desbordamiento */
+.page {
+    overflow: visible !important;
+}
+
+/* ✅ En modo impresión, asegurar que no haya colores de fondo */
+@media print {
+    .page-title {
+        color: #000 !important;
+        background: transparent !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        position: static !important;
+        margin-top: 30px !important;
+        margin-bottom: 40px !important;
+        /* En impresión, forzar ancho completo de página */
+        width: 186mm !important; /* 210mm - 12mm*2 de padding */
+        max-width: 186mm !important;
+        left: 0 !important;
+        right: 0 !important;
+    }
+}
+
+
+/* 🔥 FIX DEFINITIVO PARA MENÚ */
+.menu-wrap {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 9999 !important;
+    width: auto !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    background: #1e5aa8 !important;
+    border-radius: 6px !important;
+    overflow: visible !important;
+    display: block !important;
+}
+
+.menu-button {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
+}
+
+.menu-content {
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    width: max-content !important;
+    min-width: 140px !important;
+    background: white !important;
+    border: 1px solid #aaa !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+    z-index: 10000 !important;
+}
+
+/* Asegurar que en vista previa se oculte */
+body.preview-mode .menu-wrap {
+    display: none !important;
+}
+
+
+
+/* ===== LÍNEA DE COMPÁS ===== */
+.slot.bar-line {
+    border-left: 3px solid #000; /* Línea negra delgada a la izquierda */
+}
+
+
+
 </style>
 </head>
 
@@ -460,6 +631,7 @@ body.preview-mode .page {
 	<div class="menu-item" onclick="printPDF(); closeMenu()">Crear PDF</div>
 	<div class="menu-item" onclick="togglePreview(); closeMenu()">Vista Previa</div>
 	<div class="menu-item" onclick="openTranspose(); closeMenu()">Transposición simple</div>
+        <div class="menu-item" onclick="toggleEnharmonicMode(); closeMenu()">Acorde Enarmónico</div>
   </div>
 
 </div>
@@ -467,16 +639,20 @@ body.preview-mode .page {
 
 
 <div class="page">
-  <input class="title" placeholder="Título del tema">
-  <div class="tab-container" data-page="1"></div>
+  <input class="title" placeholder="Título del tema" value="">
+  <div class="tab-container" data-page="1">
+    <input class="page-title" data-page="1" readonly>
+  </div>
 </div>
+
+
 
 <div class="keyboard-wrap">
     <div class="fretboard" id="fretboard"></div>
 
 <div class="controls">
 
-    <!-- FILA 1: flechas + deshacer + BKSP + ACORDES -->
+    <!-- FILA 1: flechas + deshacer + BKSP + ACORDES + COMPÁS -->
     <div class="key arrow" onclick="buttonPressed(moveH, -1)">←</div>
     <div class="key arrow" onclick="buttonPressed(moveH, 1)">→</div>
     <div class="key arrow" onclick="buttonPressed(moveV, -1)">↑</div>
@@ -484,7 +660,23 @@ body.preview-mode .page {
     <div class="key action" onclick="buttonPressed(backspace)">↶</div>
     <div class="key warn" onclick="buttonPressed(removeLeftColumn)">BKSP</div>
     <div class="key action" onclick="buttonPressed(insertSpace)">SPACE</div>
-    <div class="key action" onclick="buttonPressed(openChordEditor)">+Ac</div> <!-- ✅ botón azul, visible siempre -->
+    <div class="key action" onclick="buttonPressed(toggleBarLine)">Barra | </div> <!-- ✅ Botón para la línea de compás -->
+    <div class="key action" onclick="buttonPressed(() => {
+        // Buscar si hay un acorde en el slot activo
+        let chordText = '';
+        if (activeSlot) {
+            const sys = +activeSlot.dataset.system;
+            const pos = +activeSlot.dataset.pos;
+            const existingChord = chords.find(c => c.sys === sys && c.pos === pos);
+            if (existingChord) {
+                chordText = existingChord.text;
+            }
+            // Llamar openChordEditor con los datos encontrados o vacíos
+            openChordEditor(sys, pos, chordText);
+        } else {
+            alert('Seleccioná un slot primero.');
+        }
+    })">+Ac</div>
 
     <!-- FILA 2: modos -->
     <div class="key action" id="arcStartBtn" onclick="buttonPressed(startArc)">INICIO ARCO</div>
@@ -525,7 +717,13 @@ function buildState() {
       sys: c.sys,
       pos: c.pos,
       text: c.text
-    }))
+    })),
+    barLines: barLines.map(b => ({ sys: b.sys, pos: b.pos })),
+    // ✅ Opcional: Guardar información de paginación
+    pagination: {
+      maxSystemsPerPage: MAX_SYSTEMS_PER_PAGE,
+      tabContainersCount: document.querySelectorAll(".tab-container").length
+    }
   };
 }
 
@@ -546,8 +744,44 @@ function loadAutoSave() {
   if (titleInput && state.title) {
     titleInput.value = state.title;
   }
+  if (titleInput && !state.title) {
+    titleInput.value = "";  // Asegurar que esté vacío si no hay título guardado
+  }
 
-  // ✅ 2. Restaurar slots (como antes)
+  // ✅ 2. Determinar cuántos sistemas se necesitan
+  const maxSys = Math.max(
+    ...state.slots.map(s => +s.system || 0),
+    ...state.arcs.map(a => +a.sys || 0),
+    ...state.chords.map(c => +c.sys || 0),
+    0
+  );
+  const neededSystems = Math.max(1, maxSys + 1);
+
+  // ✅ 3. Asegurar que existan exactamente `neededSystems` en el DOM
+  const tabContainer = document.querySelector(".tab-container");
+  const allSystems = Array.from(tabContainer.querySelectorAll(".system"));
+  const currentCount = allSystems.length;
+
+  // Eliminar sistemas sobrantes (si hubiera)
+  for (let i = currentCount - 1; i >= neededSystems; i--) {
+    allSystems[i].remove();
+  }
+
+  // Crear sistemas faltantes
+  for (let i = currentCount; i < neededSystems; i++) {
+    const newSystem = createSystem(i);
+    tabContainer.appendChild(newSystem);
+  }
+
+  // ✅ 4. Limpiar TODO: slots, arcos, acordes, historial, barLines (MODIFICADO)
+  document.querySelectorAll(".slot").forEach(s => s.textContent = "-");
+  arcs.forEach(a => a.el?.remove());
+  arcs = [];
+  chords = [];
+  barLines = []; // ✅ MODIFICADO: Limpiar barLines también
+  history = [];
+
+  // ✅ 5. Restaurar slots
   if (Array.isArray(state.slots)) {
     state.slots.forEach(s => {
       const slot = document.querySelector(
@@ -557,10 +791,8 @@ function loadAutoSave() {
     });
   }
 
-  // ✅ 3. Restaurar arcos
+  // ✅ 6. Restaurar arcos
   if (Array.isArray(state.arcs)) {
-    arcs.forEach(a => a.el?.remove());
-    arcs = [];
     state.arcs.forEach(a => {
       const nuevo = drawArc(a.sys, a.from, a.to, {
         type: a.type,
@@ -572,9 +804,8 @@ function loadAutoSave() {
     });
   }
 
-  // ✅ 4. Restaurar acordes
+  // ✅ 7. Restaurar acordes
   if (Array.isArray(state.chords)) {
-    chords = [];
     state.chords.forEach(c => {
       if (c.sys != null && c.pos != null && c.text != null) {
         chords.push({ sys: c.sys, pos: c.pos, text: c.text });
@@ -582,41 +813,41 @@ function loadAutoSave() {
     });
   }
 
-  // ✅ 5. RESTAURAR VISIBILIDAD DE SISTEMAS (¡nuevo!)
-  // Determinar cuántos sistemas deben mostrarse: max(sys) + 1
-  const maxSys = Math.max(
-    ...state.slots.map(s => +s.system || 0),
-    ...state.arcs.map(a => +a.sys || 0),
-    ...state.chords.map(c => +c.sys || 0),
-    0
-  );
-  const neededSystems = Math.max(1, maxSys + 1);
+  // ✅ 8. Restaurar líneas de compás (MODIFICADO)
+  if (Array.isArray(state.barLines)) {
+      barLines = state.barLines.map(b => ({ sys: b.sys, pos: b.pos })); // Copiar datos
+  } else {
+      barLines = []; // Asegurar array vacío si no existen datos
+  }
 
-  // Mostrar los primeros `neededSystems`, ocultar el resto
-  const allSystems = document.querySelectorAll(".system");
-  allSystems.forEach((sys, idx) => {
-    sys.style.display = idx < neededSystems ? "flex" : "none";
-  });
-
-  // ✅ 6. Restaurar slot activo (mejorado)
+  // ✅ 9. Restaurar slot activo y actualizar UI
   const firstSlot = document.querySelector(".slot");
   if (firstSlot) {
     activateSlot(firstSlot);
   }
-
   updateGhostClasses();
   renderAllChords();
+  updateBarLinesUI(); // ✅ MODIFICADO: Actualizar la UI de las líneas de compás aquí
+
+  // ✅ 10. Actualizar numeración lógica (Ajustado el número)
+  updateSystemNumbers();
+
+  // ✅ 11. Sincronizar SYSTEMS con la realidad (Ajustado el número)
+  SYSTEMS = neededSystems;
+
+  // ✅ 12. Actualizar títulos de página (Ajustado el número)
+  updateAllPageTitles();
 }
 
 
 
-
+/* ===== CONFIG ===== */
 /* ===== CONFIG ===== */
 const STRINGS = ["E","B","G","D","A","E"];
-let SYSTEMS = 6; // número total de sistemas en el DOM (puede crecer)
-const INITIAL_SYSTEMS = 6; // sistemas pre-generados al inicio (para compatibilidad)
+let SYSTEMS = 1; // ✅ Comenzamos con 1 sistema
 const SLOTS = 42;
 const FRETS = 24;
+const MAX_SYSTEMS_PER_PAGE = 6; // ✅ Sistemas por hoja A4 (SEGURO para PDF)
 
 /* ===== AUDIO ===== */
 const AudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -722,11 +953,7 @@ function createSystem(sys) {
   return system;
 }
 
-// ✅ Generar los 6 sistemas (para compatibilidad)
-for (let sys = 0; sys < SYSTEMS; sys++) {
-  const system = createSystem(sys);
-  tab.appendChild(system);
-}
+
 
 function onSlotClick(slot) {
     if (eraseArcMode) {
@@ -757,6 +984,7 @@ function activateSlot(slot) {
   if (sysIndex >= 0) {
     slot._logicalSystem = sysIndex; // propiedad privada, no DOM
   }
+  updateSystemNumbers();
 }
 
 function writeFromFret(string, fret) {
@@ -788,21 +1016,20 @@ function writeFromFret(string, fret) {
   target.textContent = fret;
   playNote(string, fret);
 
-  // ✅ Avanzar solo si no está en modo PLAQUÉ
-  if (!plaqueMode) {
-    let nextPos = +pos + 1;
-    let nextSys = sysIndex;
+    // ✅ Avanzar solo si no está en modo PLAQUÉ
+    if (!plaqueMode) {
+        let nextPos = +pos + 1;
+        let nextSys = sysIndex;
 
-    if (nextPos >= SLOTS) {
-      nextPos = 0;
-      nextSys += 1;
-    }
+        if (nextPos >= SLOTS) {
+            nextPos = 0;
+            nextSys += 1;
+        }
 
-    // ✅ Límite dinámico: sistemas visibles, no SYSTEMS fijo
-    const visibleCount = systems.length;
-    if (nextSys >= visibleCount) nextSys = visibleCount - 1;
+        // ✅ Límite dinámico: todos los sistemas que existen
+        if (nextSys >= systems.length) nextSys = systems.length - 1;
 
-    const nextSystem = systems[nextSys];
+        const nextSystem = systems[nextSys];
     if (nextSystem) {
       const nextSlot = nextSystem.querySelector(
         `.slot[data-string="${string}"][data-pos="${nextPos}"]`
@@ -813,7 +1040,7 @@ function writeFromFret(string, fret) {
       }
     }
   }
-
+   
   autoSave();
 }
 
@@ -821,102 +1048,82 @@ function writeFromFret(string, fret) {
 
 
 
-function backspace() {
-    if (!history.length) return;
-    const last = history.pop();
-    if (last.type === "note") {
-        last.slot.textContent = last.oldValue;
-        activateSlot(last.slot);
-    } else if (last.type === "arc") {
-        last.el.remove();
-    }
-}
-
-
-
 
 function insertSpace() {
-    cleanupOrphanedArcs(); // ✅ prevención
+    cleanupOrphanedArcs();
     if (!activeSlot) return;
 
-    const startSys = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
+    const allSystems = Array.from(document.querySelectorAll(".system"));
+    const currentSystemEl = activeSlot.closest(".system");
+    const startIndex = allSystems.indexOf(currentSystemEl);
+    if (startIndex === -1) return;
+
     const startPos = +activeSlot.dataset.pos;
 
-    /* ===== 1. MOVER NOTAS (DE ATRÁS HACIA ADELANTE) ===== */
-    for (let sys = SYSTEMS - 1; sys >= startSys; sys--) {
+    /* ===== 1. MOVER NOTAS (ATRÁS → ADELANTE) ===== */
+    for (let i = allSystems.length - 1; i >= startIndex; i--) {
+        const sysEl = allSystems[i];
         for (let pos = SLOTS - 1; pos >= 0; pos--) {
-            // No tocar lo que está antes del punto de inserción
-            if (sys === startSys && pos <= startPos) continue;
+            if (i === startIndex && pos <= startPos) continue;
 
             for (let string = 0; string < 6; string++) {
-                const current = document.querySelector(
-                    `.slot[data-system="${sys}"][data-string="${string}"][data-pos="${pos}"]`
+                const current = sysEl.querySelector(
+                    `.slot[data-string="${string}"][data-pos="${pos}"]`
                 );
                 if (!current) continue;
 
-                // slot anterior lógico
-                let prevSys = sys;
+                let prevSysIdx = i;
                 let prevPos = pos - 1;
 
                 if (prevPos < 0) {
-                    prevSys--;
+                    prevSysIdx--;
                     prevPos = SLOTS - 1;
                 }
 
-                if (prevSys < startSys) continue;
+                if (prevSysIdx < startIndex) continue;
 
-                const prev = document.querySelector(
-                    `.slot[data-system="${prevSys}"][data-string="${string}"][data-pos="${prevPos}"]`
+                const prevSys = allSystems[prevSysIdx];
+                const prev = prevSys?.querySelector(
+                    `.slot[data-string="${string}"][data-pos="${prevPos}"]`
                 );
-
-                current.textContent = prev ? prev.textContent : "-";
+                current.textContent = prev?.textContent || "-";
             }
         }
     }
 
     // Vaciar slot activo
+    const curSys = allSystems[startIndex];
     for (let s = 0; s < 6; s++) {
-        const slot = document.querySelector(
-            `.slot[data-system="${startSys}"][data-string="${s}"][data-pos="${startPos}"]`
+        const slot = curSys.querySelector(
+            `.slot[data-string="${s}"][data-pos="${startPos}"]`
         );
         if (slot) slot.textContent = "-";
     }
 
     /* ===== 2. ACTUALIZAR ARCOS Y LIGADOS ===== */
     const newArcs = [];
-
-    // quitar TODOS los SVG primero
     arcs.forEach(a => a.el?.remove());
 
     arcs.forEach(a => {
-        // arco completamente antes → se mantiene igual
-        if (
-            a.sys < startSys ||
-            (a.sys === startSys && a.to < startPos)
-        ) {
+        if (a.sys < startIndex || (a.sys === startIndex && a.to < startPos)) {
             newArcs.push(a);
             return;
         }
 
-        // modificar posiciones
         if (a.type === "ligado" || a.type === "slide") {
-            // ligado/slide: solo afecta si está en el mismo sistema y cuerda
-            if (a.sys === startSys) {
+            if (a.sys === startIndex) {
                 if (a.from >= startPos) {
                     a.from++;
                     a.to++;
                 } else if (a.from < startPos && a.to >= startPos) {
                     a.to++;
                 }
-            }
-            // si está en sistema posterior → se desplaza completa columna
-            else if (a.sys > startSys) {
+            } else if (a.sys > startIndex) {
                 a.from++;
                 a.to++;
             }
         } else {
-            // arco normal
-            if (a.sys > startSys || a.from >= startPos) {
+            if (a.sys > startIndex || a.from >= startPos) {
                 a.from++;
                 a.to++;
             } else if (a.from < startPos && a.to >= startPos) {
@@ -924,15 +1131,14 @@ function insertSpace() {
             }
         }
 
-        // eliminar si se sale
         if (a.from >= SLOTS || a.to >= SLOTS) return;
-
         newArcs.push(a);
     });
 
-    // reconstrucción limpia
     arcs = [];
     newArcs.forEach(a => {
+        const sysEl = allSystems[a.sys];
+        if (!sysEl) return;
         const nuevo = drawArc(a.sys, a.from, a.to, {
             type: a.type,
             string: a.string
@@ -941,47 +1147,51 @@ function insertSpace() {
     });
 
     /* ===== 3. ACTUALIZAR CHORDS ===== */
-    const newChords = [];
-
-    chords.forEach(c => {
-        // Copiar el acorde original
-        let newChord = { ...c };
-
-        // Si el acorde está en un sistema posterior al inicio
-        if (c.sys > startSys) {
-            // Mover hacia adelante
-            newChord.pos++;
-            
-            // Si se sale del sistema, mover al siguiente sistema, primera posición
-            if (newChord.pos >= SLOTS) {
-                newChord.sys++;
-                newChord.pos = 0;
+    chords = chords.map(c => {
+        if (c.sys > startIndex) {
+            c.pos++;
+            if (c.pos >= SLOTS) {
+                c.sys++;
+                c.pos = 0;
+            }
+        } else if (c.sys === startIndex && c.pos >= startPos) {
+            c.pos++;
+            if (c.pos >= SLOTS) {
+                c.sys++;
+                c.pos = 0;
             }
         }
-        // Si el acorde está en el mismo sistema
-        else if (c.sys === startSys) {
-            // Solo mover si está en o después de la posición de inicio
-            if (c.pos >= startPos) {
-                newChord.pos++;
-                // Si se sale del sistema, mover al siguiente sistema
-                if (newChord.pos >= SLOTS) {
-                    newChord.sys++;
-                    newChord.pos = 0;
-                }
+        return c;
+    }).filter(c =>
+        c.pos >= 0 && c.pos < SLOTS &&
+        c.sys >= 0 && c.sys < allSystems.length
+    );
+
+    /* ===== 4. ACTUALIZAR LÍNEAS DE COMPÁS ===== */
+    barLines = barLines.map(b => {
+        if (b.sys > startIndex) {
+            b.pos++;
+            if (b.pos >= SLOTS) {
+                b.sys++;
+                b.pos = 0;
+            }
+        } else if (b.sys === startIndex && b.pos >= startPos) {
+            b.pos++;
+            if (b.pos >= SLOTS) {
+                b.sys++;
+                b.pos = 0;
             }
         }
-        // Si el acorde está en un sistema anterior, no se mueve
+        return b;
+    }).filter(b =>
+        b.pos >= 0 && b.pos < SLOTS &&
+        b.sys >= 0 && b.sys < allSystems.length
+    );
 
-        // Filtrar acordes que queden en posiciones válidas
-        if (newChord.pos >= 0 && newChord.pos < SLOTS && newChord.sys >= 0 && newChord.sys < SYSTEMS) {
-            newChords.push(newChord);
-        }
-    });
-
-    chords = newChords;
 
     updateGhostClasses();
     renderAllChords();
+    updateBarLinesUI(); // ✅ Agregar esta línea
     autoSave();
 }
 
@@ -989,88 +1199,144 @@ function insertSpace() {
 
 
 function removeLeftColumn() {
-    cleanupOrphanedArcs(); // ✅ prevención
+    cleanupOrphanedArcs();
     if (!activeSlot) return;
 
-    const startSys = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
+    const allSystems = Array.from(document.querySelectorAll(".system"));
+    const currentSystemEl = activeSlot.closest(".system");
+    const startIndex = allSystems.indexOf(currentSystemEl);
+    if (startIndex === -1) return;
+
     const startPos = +activeSlot.dataset.pos;
+    if (startIndex === 0 && startPos === 0) return;
 
-    // No se puede borrar si estamos en la primera columna absoluta
-    if (startSys === 0 && startPos === 0) return;
+    /* ===== 0. BORRAR CONTENIDO DE LA COLUMNA OBJETIVO (startIndex, startPos - 1) ===== */
+    let targetSysIndex = startIndex;
+    let targetPos = startPos - 1;
 
-    /* ===== 1. MOVER NOTAS (DE ADELANTE HACIA ATRÁS) ===== */
-    for (let sys = startSys; sys < SYSTEMS; sys++) {
-        for (let pos = (sys === startSys ? startPos : 0); pos < SLOTS; pos++) {
+    // Si startPos es 0, la columna objetivo es la última del sistema anterior
+    if (targetPos < 0) {
+        if (targetSysIndex > 0) { // Verificar que haya sistema anterior
+            targetSysIndex = startIndex - 1;
+            targetPos = SLOTS - 1;
+        } else {
+            // Si estamos en el primer slot del primer sistema, no debería llegar acá por el if de arriba
+            // Pero por si acaso:
+            return;
+        }
+    }
+
+    // Vaciar los slots en la posición objetivo
+    const targetSysEl = allSystems[targetSysIndex];
+    if (targetSysEl) { // Verificar que el sistema exista
+        for (let s = 0; s < 6; s++) {
+            const slot = targetSysEl.querySelector(
+                `.slot[data-string="${s}"][data-pos="${targetPos}"]`
+            );
+            if (slot) {
+                slot.textContent = "-"; // Borrar contenido visual
+            }
+        }
+    }
+
+    // Vaciar acordes en la posición objetivo
+    chords = chords.filter(c => !(c.sys === targetSysIndex && c.pos === targetPos));
+    // ✅ Vaciar líneas de compás en la posición objetivo
+    barLines = barLines.filter(b => !(b.sys === targetSysIndex && b.pos === targetPos));
+
+
+    /* ===== 1. MOVER NOTAS (ADELANTE → ATRÁS) ===== */
+    // (El código original del paso 1 permanece igual)
+    for (let i = startIndex; i < allSystems.length; i++) {
+        const sysEl = allSystems[i];
+        const startPosInSys = (i === startIndex) ? startPos : 0;
+
+        for (let pos = startPosInSys; pos < SLOTS; pos++) {
             for (let string = 0; string < 6; string++) {
-                const current = document.querySelector(
-                    `.slot[data-system="${sys}"][data-string="${string}"][data-pos="${pos}"]`
+                const current = sysEl.querySelector(
+                    `.slot[data-string="${string}"][data-pos="${pos}"]`
                 );
                 if (!current) continue;
 
-                // slot destino (a la izquierda lógica)
-                let destSys = sys;
+                let destSysIdx = i;
                 let destPos = pos - 1;
 
                 if (destPos < 0) {
-                    destSys--;
+                    destSysIdx--;
                     destPos = SLOTS - 1;
                 }
 
-                // No tocar lo que queda antes del punto de borrado
+                // No tocar antes del punto de inicio
                 if (
-                    destSys < startSys ||
-                    (destSys === startSys && destPos < startPos - 1)
+                    destSysIdx < startIndex ||
+                    (destSysIdx === startIndex && destPos < startPos - 1)
                 ) continue;
 
-                const dest = document.querySelector(
-                    `.slot[data-system="${destSys}"][data-string="${string}"][data-pos="${destPos}"]`
-                );
+                if (destSysIdx < 0) continue;
 
+                const destSys = allSystems[destSysIdx];
+                const dest = destSys?.querySelector(
+                    `.slot[data-string="${string}"][data-pos="${destPos}"]`
+                );
                 if (dest) dest.textContent = current.textContent;
             }
         }
     }
 
     /* ===== 2. VACIAR ÚLTIMA COLUMNA ===== */
-    for (let string = 0; string < 6; string++) {
-        const last = document.querySelector(
-            `.slot[data-system="${SYSTEMS - 1}"][data-string="${string}"][data-pos="${SLOTS - 1}"]`
-        );
-        if (last) last.textContent = "-";
+    // (Este paso también se debe corregir para apuntar al sistema correcto)
+    // Determinar cuál es el sistema cuya última columna debe vaciarse
+    let sysToClearLastColumn = allSystems.length - 1; // Por defecto, el último sistema
+
+    // Si el movimiento afecta sistemas anteriores (por estar en startPos 0),
+    // la columna sobrante está en el sistema anterior al startIndex
+    if (startIndex > 0 && startPos === 0) {
+        sysToClearLastColumn = startIndex - 1; // Sistema anterior al de inicio
+    }
+
+    const lastSysToClear = allSystems[sysToClearLastColumn];
+    if (lastSysToClear) { // Verificar que el sistema exista
+        for (let s = 0; s < 6; s++) {
+            const slot = lastSysToClear.querySelector(`.slot[data-string="${s}"][data-pos="${SLOTS - 1}"]`);
+            if (slot) slot.textContent = "-";
+        }
     }
 
     /* ===== 3. ACTUALIZAR ARCOS Y LIGADOS ===== */
+    // (El código original del paso 3 permanece igual)
     const newArcs = [];
+    arcs.forEach(a => a.el?.remove());
 
     arcs.forEach(a => {
-        a.el?.remove();
+        const sysEl = allSystems[a.sys];
+        if (!sysEl) return;
 
-        if (a.sys < startSys) {
+        if (a.sys < startIndex) {
             newArcs.push(a);
             return;
         }
 
         if (a.type === "ligado" || a.type === "slide") {
-            if (a.sys === startSys) {
+            if (a.sys === startIndex) {
                 if (a.from >= startPos) {
                     a.from--;
                     a.to--;
                 } else if (a.from < startPos && a.to >= startPos) {
                     a.to--;
                 }
-            } else if (a.sys > startSys) {
+            } else if (a.sys > startIndex) {
                 a.from--;
                 a.to--;
             }
         } else {
-            if (a.sys === startSys) {
+            if (a.sys === startIndex) {
                 if (a.from >= startPos) {
                     a.from--;
                     a.to--;
                 } else if (a.from < startPos && a.to >= startPos) {
                     a.to--;
                 }
-            } else if (a.sys > startSys) {
+            } else if (a.sys > startIndex) {
                 a.from--;
                 a.to--;
             }
@@ -1082,6 +1348,8 @@ function removeLeftColumn() {
 
     arcs = [];
     newArcs.forEach(a => {
+        const sysEl = allSystems[a.sys];
+        if (!sysEl) return;
         const nuevo = drawArc(a.sys, a.from, a.to, {
             type: a.type,
             string: a.string
@@ -1090,70 +1358,73 @@ function removeLeftColumn() {
     });
 
     /* ===== 4. ACTUALIZAR CHORDS ===== */
-    // 🔴 CASO ESPECIAL: Cuando se borra el primer slot de un sistema
-    // y hay acordes en el primer slot del sistema siguiente, deben moverse
-    // al último slot del sistema actual
-    const newChords = [];
-
-    chords.forEach(c => {
-        // Copiar el acorde original
-        let newChord = { ...c };
-
-        // Si el acorde está en un sistema posterior al inicio
-        if (c.sys > startSys) {
-            // Mover hacia atrás
-            newChord.pos--;
-            
-            // Si se vuelve negativo, mover al sistema anterior, última posición
-            if (newChord.pos < 0) {
-                newChord.sys--;
-                newChord.pos = SLOTS - 1;
+    // (El código original del paso 4 permanece igual)
+    chords = chords.map(c => {
+        if (c.sys > startIndex) {
+            c.pos--;
+            if (c.pos < 0) {
+                c.sys--;
+                c.pos = SLOTS - 1;
             }
+        } else if (c.sys === startIndex && c.pos >= startPos) {
+            c.pos--;
         }
-        // Si el acorde está en el mismo sistema
-        else if (c.sys === startSys) {
-            // Solo mover si está en o después de la posición de inicio
-            if (c.pos >= startPos) {
-                newChord.pos--;
-                // No permitir posiciones negativas en el mismo sistema
-                if (newChord.pos < 0) {
-                    // Esto no debería ocurrir porque ya validamos startPos > 0
-                    return; // Descarta este acorde
-                }
+        return c;
+    }).filter(c =>
+        c.pos >= 0 && c.pos < SLOTS &&
+        c.sys >= 0 && c.sys < allSystems.length
+    );
+
+    /* ===== 5. ACTUALIZAR LÍNEAS DE COMPÁS ===== */
+    // 🔥 PRIMERO: Filtrar las líneas de compás que estaban en la columna startPos del sistema startIndex (borrarlas)
+    barLines = barLines.filter(b => !(b.sys === startIndex && b.pos === startPos));
+
+    // Luego, actualizar posiciones de las líneas de compás restantes
+    barLines = barLines.map(b => {
+        if (b.sys > startIndex) {
+            b.pos--;
+            if (b.pos < 0) {
+                b.sys--;
+                b.pos = SLOTS - 1;
             }
+        } else if (b.sys === startIndex && b.pos >= startPos) {
+            b.pos--;
         }
-        // Si el acorde está en un sistema anterior, no se mueve
+        return b;
+    }).filter(b =>
+        b.pos >= 0 && b.pos < SLOTS &&
+        b.sys >= 0 && b.sys < allSystems.length
+    );
 
-        // Filtrar acordes que queden en posiciones válidas
-        if (newChord.pos >= 0 && newChord.pos < SLOTS && newChord.sys >= 0 && newChord.sys < SYSTEMS) {
-            newChords.push(newChord);
-        }
-    });
 
-    chords = newChords;
-
-    /* ===== 5. MOVER SLOT ACTIVO ===== */
-    let newSys = startSys;
+    /* ===== 6. MOVER SLOT ACTIVO ===== */
+    // (El código original del paso 5 permanece igual)
+    let newSysIdx = startIndex;
     let newPos = startPos - 1;
 
     if (newPos < 0) {
-        newSys--;
-        newPos = SLOTS - 1;
+        if (startIndex > 0) {
+            newSysIdx = startIndex - 1;
+            newPos = SLOTS - 1;
+        } else {
+            newPos = 0;
+        }
     }
 
-    // protección de borde
-    if (newSys < 0) {
-        newSys = 0;
-        newPos = 0;
-    }
+    const targetSys = allSystems[newSysIdx];
+    if (!targetSys) return;
 
-    const newActive = document.querySelector(
-        `.slot[data-system="${newSys}"][data-string="${activeSlot.dataset.string}"][data-pos="${newPos}"]`
+    const newActive = targetSys.querySelector(
+        `.slot[data-string="${activeSlot.dataset.string}"][data-pos="${newPos}"]`
     );
+    if (newActive) {
+        activateSlot(newActive);
+        ensureSlotVisible(newActive);
+    }
 
-    if (newActive) activateSlot(newActive);
     updateGhostClasses();
     renderAllChords();
+    updateBarLinesUI(); // ✅ Agregar esta línea
     autoSave();
 }
 
@@ -1176,39 +1447,45 @@ function ensureSlotVisible(slot) {
 
 function moveH(d) {
     if (!activeSlot) return;
-	const s = activeSlot._logicalSystem ?? +activeSlot.dataset.system;
-	const { string, pos } = activeSlot.dataset;
-	let p = +pos + d;
 
+    const { string, pos } = activeSlot.dataset;
+    const system = activeSlot.closest(".system");
+    const allSystems = Array.from(document.querySelectorAll(".system"));
+    const currentSysIndex = allSystems.indexOf(system);
+    if (currentSysIndex === -1) return;
+
+    let p = +pos + d;
+    let s = currentSysIndex;
+
+    // Manejo de avance/retroceso entre sistemas
     if (p >= SLOTS) {
-        p = 0;
-        s += 1;
-        if (s >= SYSTEMS) s = SYSTEMS - 1;
-    }
-    if (p < 0) {
-        s -= 1;
-        if (s < 0) {
-            s = 0;
+        if (s + 1 < allSystems.length) {
+            s += 1;
             p = 0;
         } else {
             p = SLOTS - 1;
         }
+    } else if (p < 0) {
+        if (s > 0) {
+            s -= 1;
+            p = SLOTS - 1;
+        } else {
+            p = 0;
+        }
     }
 
-	// ✅ Buscar por índice visual, no por data-system
-	const systems = Array.from(document.querySelectorAll(".system"))
-	  .filter(el => el.style.display !== "none");
-	if (s < 0 || s >= systems.length) return;
-	const targetSystem = systems[s];
-	const nextSlot = targetSystem.querySelector(
-	  `.slot[data-string="${string}"][data-pos="${p}"]`
-	);
+    // Buscar el slot destino
+    const targetSystem = allSystems[s];
+    if (!targetSystem) return;
+
+    const nextSlot = targetSystem.querySelector(
+        `.slot[data-string="${string}"][data-pos="${p}"]`
+    );
 
     if (nextSlot) {
         activateSlot(nextSlot);
         playColumnOfSlot(nextSlot);
-
-    ensureSlotVisible(nextSlot);
+        ensureSlotVisible(nextSlot);
     }
 }
 
@@ -1280,18 +1557,23 @@ function togglePlaque() {
     // Si se DESACTIVA plaqué, avanzamos una vez
     if (wasActive && !plaqueMode && plaqueLastSlot) {
         const { system, string, pos } = plaqueLastSlot.dataset;
+        
+        // Usar todos los sistemas (todos ahora)
+        const allSystems = document.querySelectorAll(".system");
+        const currentSystem = plaqueLastSlot.closest(".system");
+        const currentIndex = Array.from(allSystems).indexOf(currentSystem);
 
         let nextPos = +pos + 1;
-        let nextSys = +system;
+        let nextSys = currentIndex;
 
         if (nextPos >= SLOTS) {
             nextPos = 0;
             nextSys += 1;
-            if (nextSys >= SYSTEMS) nextSys = SYSTEMS - 1;
+            if (nextSys >= allSystems.length) nextSys = allSystems.length - 1;
         }
 
-        const nextSlot = document.querySelector(
-            `.slot[data-system="${nextSys}"][data-string="${string}"][data-pos="${nextPos}"]`
+        const nextSlot = allSystems[nextSys]?.querySelector(
+            `.slot[data-string="${string}"][data-pos="${nextPos}"]`
         );
 
         if (nextSlot) activateSlot(nextSlot);
@@ -1703,13 +1985,71 @@ function buttonPressed(func, ...args) {
 }
 
 
-const firstSlot = document.querySelector('.slot');
-if (firstSlot) {
-    firstSlot.classList.add('active');
-    activeSlot = firstSlot;
-}
 
-loadAutoSave();
+
+// ✅ Inicialización segura: esperar a que el DOM esté listo
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Obtener contenedor
+  const tabContainer = document.querySelector(".tab-container");
+  if (!tabContainer) {
+    console.error("❌ No se encontró .tab-container");
+    return;
+  }
+
+  // 2. Crear UN sistema inicial
+  const system = createSystem(0);
+  tabContainer.appendChild(system);
+  
+  // ✅ Asegurar que SYSTEMS sea 1
+  SYSTEMS = 1;
+
+  // 3. Activar primer slot y cargar autosave
+  const firstSlot = system.querySelector('.slot[data-string="5"][data-pos="0"]');
+  if (firstSlot) {
+    activateSlot(firstSlot);
+    ensureSlotVisible(firstSlot);
+  }
+
+  // 4. Restaurar desde localStorage
+  loadAutoSave();
+  
+  // 5. Agregar event listener al título principal - MODIFICADO
+  const mainTitleInput = document.querySelector(".title");
+  if (mainTitleInput) {
+    // Guardar el título original cuando el usuario empieza a editar
+    mainTitleInput.addEventListener("focus", function() {
+      this.dataset.originalValue = this.value;
+    });
+    
+    // Actualizar paginación cuando el usuario termina de editar
+    mainTitleInput.addEventListener("blur", function() {
+      // Pequeño delay para asegurar que el valor se actualizó
+      setTimeout(() => {
+        updateAllPageTitles();
+        autoSave();
+      }, 100);
+    });
+    
+    // También actualizar cuando presiona Enter
+    mainTitleInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        this.blur(); // Provoca el evento blur
+      }
+    });
+    
+    // También actualizar mientras escribe (pero sin paginación)
+    mainTitleInput.addEventListener("input", function() {
+      autoSave(); // Solo guardar, no actualizar paginación
+    });
+  }
+  
+  // 6. Llamar una vez para inicializar
+  updateAllPageTitles();
+});
+
+
+
+
 
 let autoSaveTimer = null;
 
@@ -1731,42 +2071,71 @@ function newTheme() {
   // ✅ 1. Borrar autosave
   localStorage.removeItem("jgt-autosave");
 
-  // ✅ 2. Limpiar TODOS los slots (sin importar cuántos sistemas existan)
-  document.querySelectorAll(".slot").forEach(s => {
-    s.textContent = "-";
-    s.classList.remove("active");
-  });
-
-  // ✅ 3. Limpiar estructuras
+  // ✅ 2. Limpiar todas las estructuras de datos
   arcs.forEach(a => a.el?.remove());
   arcs = [];
   chords = [];
   history = [];
+  barLines = [];
 
-  // ✅ 4. Limpiar título
+  // ✅ 3. Limpiar título
   const titleInput = document.querySelector(".title");
-  if (titleInput) titleInput.value = "";
-
-  // ✅ 5. Ocultar TODOS los sistemas EXCEPTO el primero (índice 0)
-  const allSystems = document.querySelectorAll(".system");
-  allSystems.forEach((sys, idx) => {
-    sys.style.display = idx === 0 ? "flex" : "none";
-    // ✅ Asegurar coherencia del dataset.system
-    sys.dataset.system = idx;
-    sys.querySelectorAll(".slot").forEach(slot => {
-      slot.dataset.system = idx;
-    });
-  });
-
-  // ✅ 6. Activar primer slot del sistema 0, cuerda 5 (Mi grave), pos 0
-  const firstSlot = document.querySelector('.slot[data-system="0"][data-string="5"][data-pos="0"]');
-  if (firstSlot) {
-    activateSlot(firstSlot);
-    updateGhostClasses();
+  if (titleInput) {
+      titleInput.value = "";
+      titleInput.placeholder = "Título del tema";
   }
 
-  // ✅ 7. Renderizar y guardar
+  // ✅ 4. Eliminar todas las páginas excepto la primera
+  const pages = document.querySelectorAll(".tab-container");
+  if (pages.length > 1) {
+    for (let i = pages.length - 1; i >= 1; i--) {
+      pages[i].remove();
+    }
+  }
+
+  // ✅ 5. En la primera página, eliminar todos los sistemas
+  const firstPage = document.querySelector(".tab-container");
+  if (firstPage) {
+    const systems = firstPage.querySelectorAll(".system");
+    systems.forEach(sys => sys.remove());
+  }
+
+  // ✅ 6. Crear UN SOLO sistema nuevo
+  if (firstPage) {
+    const newSystem = createSystem(0);
+    firstPage.appendChild(newSystem);
+    
+    // ✅ 7. Resetear SYSTEMS global a 1
+    SYSTEMS = 1;
+  }
+
+  // ✅ 8. Limpiar contenido de slots del nuevo sistema
+  const firstSystem = document.querySelector(".system");
+  if (firstSystem) {
+    firstSystem.querySelectorAll(".slot").forEach(s => {
+      s.textContent = "-";
+      s.classList.remove("active");
+      s.classList.remove("bar-line");  // ← AÑADE ESTA LÍNEA
+  });
+
+    // ✅ 9. Activar primer slot
+    const firstSlot = firstSystem.querySelector('.slot[data-string="5"][data-pos="0"]');
+    if (firstSlot) {
+      activateSlot(firstSlot);
+      ensureSlotVisible(firstSlot);
+    }
+  }
+
+  // ✅ 10. Actualizar UI
+  updateGhostClasses();
   renderAllChords();
+  updateSystemNumbers();
+  updateBarLinesUI();
+  
+  // ✅ 11. Actualizar títulos de página
+  updateAllPageTitles();
+
+  // ✅ 12. Guardar estado limpio
   autoSave();
 }
 
@@ -1828,7 +2197,7 @@ function loadTheme() {
 
 
 function loadState(state) {
-  // ✅ 1. Borrar TODO lo anterior: slots, arcos, historial, acordes
+  // ✅ 1. Borrar TODO lo anterior
   document.querySelectorAll(".slot").forEach(s => s.textContent = "-");
   arcs.forEach(a => a.el?.remove());
   arcs = [];
@@ -1839,7 +2208,7 @@ function loadState(state) {
   const titleInput = document.querySelector(".title");
   titleInput.value = state.title || "";
 
-  // ✅ 3. Determinar cuántos sistemas deben mostrarse
+  // ✅ 3. Determinar cuántos sistemas deben existir
   const maxSys = Math.max(
     ...state.slots.map(s => +s.system || 0),
     ...state.arcs.map(a => +a.sys || 0),
@@ -1848,24 +2217,23 @@ function loadState(state) {
   );
   const neededSystems = Math.max(1, maxSys + 1);
 
-  // ✅ 4. Asegurar que haya suficientes sistemas en el DOM
-  let currentSystems = document.querySelectorAll(".system").length;
-  while (currentSystems < neededSystems) {
-    const newSys = createSystem(currentSystems);
-    tab.appendChild(newSys);
-    SYSTEMS++;
-    currentSystems++;
+  // ✅ 4. ✅ LIMPIAR TODOS LOS SISTEMAS EXISTENTES y crear solo los necesarios
+  const tabContainer = document.querySelector(".tab-container");
+  if (!tabContainer) return;
+
+  // 🔥 Eliminar todos los sistemas actuales del DOM
+  tabContainer.querySelectorAll(".system").forEach(el => el.remove());
+
+  // ✅ Crear exactamente `neededSystems`
+  for (let i = 0; i < neededSystems; i++) {
+    const newSystem = createSystem(i);
+    tabContainer.appendChild(newSystem);
   }
 
-  // ✅ 5. Mostrar los primeros `neededSystems`, ocultar el resto
-  const allSystems = document.querySelectorAll(".system");
-  allSystems.forEach((sys, idx) => {
-    sys.style.display = idx < neededSystems ? "flex" : "none";
-    sys.dataset.system = idx;
-    sys.querySelectorAll(".slot").forEach(slot => slot.dataset.system = idx);
-  });
+  // ✅ Actualizar SYSTEMS global
+  SYSTEMS = neededSystems;
 
-  // ✅ 6. Cargar slots
+  // ✅ 5. Cargar slots
   if (Array.isArray(state.slots)) {
     state.slots.forEach(s => {
       const slot = document.querySelector(
@@ -1875,7 +2243,7 @@ function loadState(state) {
     });
   }
 
-  // ✅ 7. Cargar arcos
+  // ✅ 6. Cargar arcos
   if (Array.isArray(state.arcs)) {
     state.arcs.forEach(a => {
       const nuevo = drawArc(a.sys, a.from, a.to, {
@@ -1888,13 +2256,20 @@ function loadState(state) {
     });
   }
 
-  // ✅ 8. Cargar acordes
+  // ✅ 7. Cargar acordes
   if (Array.isArray(state.chords)) {
     state.chords.forEach(c => {
       if (c.sys != null && c.pos != null && c.text != null) {
         chords.push({ sys: c.sys, pos: c.pos, text: c.text });
       }
     });
+  }
+
+  // ✅ 8. Cargar líneas de compás (MODIFICADO)
+  if (Array.isArray(state.barLines)) {
+      barLines = state.barLines.map(b => ({ sys: b.sys, pos: b.pos })); // Copiar datos
+  } else {
+      barLines = []; // Asegurar array vacío si no existen datos
   }
 
   // ✅ 9. Slot activo inicial + render
@@ -1904,8 +2279,15 @@ function loadState(state) {
   }
   updateGhostClasses();
   renderAllChords();
-  autoSave();
+  updateBarLinesUI(); // ✅ MODIFICADO: Actualizar la UI de las líneas de compás aquí
+  autoSave(); // ✅ MODIFICADO: autoSave() va después de updateBarLinesUI()
+  
+  // ✅ 10. Actualizar títulos de página (Ajustado el número)
+  updateAllPageTitles();
 }
+
+
+
 
 
 
@@ -2047,8 +2429,198 @@ function applyTranspose() {
     });
 
     autoSave();
+
+    transposeAllChordSlots(transposeAmount); // Asume que 'transposeAmount' es el número de semitonos calculado
+
+
     closeTranspose();
 }
+
+
+
+
+// ✅ Toggle línea de compás en la columna del slot activo
+function toggleBarLine() {
+    if (!activeSlot) return;
+    const sys = +activeSlot.dataset.system;
+    const pos = +activeSlot.dataset.pos;
+
+    // Verificar si ya hay una barra en esta columna
+    const existingBar = barLines.find(b => b.sys === sys && b.pos === pos);
+
+    if (existingBar) {
+        // Si existe, removerla
+        barLines = barLines.filter(b => !(b.sys === sys && b.pos === pos));
+    } else {
+        // Si no existe, agregarla
+        barLines.push({ sys, pos });
+    }
+
+    // Actualizar visualmente la UI
+    updateBarLinesUI();
+    autoSave();
+}
+
+// ✅ Estado para almacenar las líneas de compás
+let barLines = []; // Array de objetos {sys, pos}
+
+
+
+
+
+
+// ✅ Actualiza la UI para mostrar/ocultar las líneas de compás
+function updateBarLinesUI() {
+    // Primero, remover la clase de todos los slots
+    document.querySelectorAll(".slot").forEach(slot => {
+        slot.classList.remove("bar-line");
+    });
+
+    // Luego, aplicar la clase a los slots que correspondan
+    barLines.forEach(bar => {
+        const slotsInColumn = document.querySelectorAll(
+            `.system[data-system="${bar.sys}"] .slot[data-pos="${bar.pos}"]`
+        );
+        slotsInColumn.forEach(slot => {
+            slot.classList.add("bar-line");
+        });
+    });
+}
+
+
+
+// Escala cromática para elegir enarmónicos de la raíz (y también usada como base para el bajo)
+// Índices: 0=C, 1=C#, 2=D, 3=Eb, 4=E, 5=F, 6=F#, 7=G, 8=G#, 9=A, 10=Bb, 11=B
+const CHROMATIC_SCALE = [
+    "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"
+];
+
+// Función para transponer UNA nota (raíz o bajo) usando la escala correcta
+function transposeNote(note, semitones) {
+    // Encontrar el índice original en la escala cromática
+    let originalIndex = CHROMATIC_SCALE.indexOf(note);
+    if (originalIndex === -1) {
+        // Si no está en la escala base (por ejemplo, Db), intentar encontrar su enarmónico
+        // Mapeo de enarmónicos comunes que no están en la escala base
+         const enharmonicMap = {
+            'Db': 'C#',
+            'D#': 'Eb',
+            'Gb': 'F#',
+            'G#': 'Ab',
+            'A#': 'Bb'
+            // 'Cb' -> 'B', 'Fb' -> 'E' si se necesitan
+        };
+         const mappedNote = enharmonicMap[note];
+         if (mappedNote) {
+             originalIndex = CHROMATIC_SCALE.indexOf(mappedNote);
+         }
+    }
+
+    if (originalIndex === -1) {
+        console.warn(`Nota "${note}" no encontrada en la escala cromática ni en el mapeo enarmónico. Manteniendo original.`);
+        return note; // Devolver la nota original si no se puede mapear
+    }
+
+    // Calcular nuevo índice usando aritmética modular
+    const newIndex = ((originalIndex + semitones) % 12 + 12) % 12;
+    return CHROMATIC_SCALE[newIndex];
+}
+
+// Función para transponer una nota (bajo) respetando la alteración de la raíz transpuesta
+function transposeBassWithEnharmonicRule(bassNote, semitones, transposedRoot) {
+    // Primero, transponemos el bajo sin considerar la regla
+    const rawTransposedBass = transposeNote(bassNote, semitones);
+
+    // Determinar la alteración de la raíz ya transpuesta
+    const rootHasSharp = transposedRoot.includes('#');
+    const rootHasFlat = transposedRoot.includes('b');
+
+    // Si la raíz transpuesta es sostenido, el bajo no puede ser bemol
+    if (rootHasSharp) {
+        if (rawTransposedBass.includes('b')) {
+            // Encontrar la enarmónica del bajo que no sea bemol
+            const enarb = getEnharmonicNotFlat(rawTransposedBass);
+            return enarb;
+        }
+    }
+    // Si la raíz transpuesta es bemol, el bajo no puede ser sostenido
+    else if (rootHasFlat) {
+        if (rawTransposedBass.includes('#')) {
+            // Encontrar la enarmónica del bajo que no sea sostenido
+            const enarb = getEnharmonicNotSharp(rawTransposedBass);
+            return enarb;
+        }
+    }
+    // Si la raíz transpuesta es natural, no hay restricción, devolver el bajo transpuesto tal cual
+    return rawTransposedBass;
+}
+
+// Función auxiliar para obtener enarmónico sin bemol (preferentemente natural)
+function getEnharmonicNotFlat(note) {
+    const map = { 'Cb': 'B', 'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+    return map[note] || note; // Si no está en el mapa, devolver la original (improbable)
+}
+
+// Función auxiliar para obtener enarmónico sin sostenido (preferentemente natural)
+function getEnharmonicNotSharp(note) {
+    const map = { 'C#': 'Db', 'D#': 'Eb', 'E#': 'F', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb', 'B#': 'C' };
+    return map[note] || note; // Si no está en el mapa, devolver la original (improbable)
+}
+
+// Función principal para transponer un acorde manteniendo su estructura y respetando la regla para el bajo
+function transposeChordText(chordText, semitones) {
+    if (!chordText || chordText.trim() === '') {
+        return chordText;
+    }
+
+    // Separar por slash para obtener parte del bajo
+    const parts = chordText.split('/');
+    const mainPart = parts[0];
+    const bassPart = parts.length > 1 ? parts[1] : null;
+
+    // Extraer la nota base (primera letra mayúscula y posible alteración)
+    const rootMatch = mainPart.match(/^([A-G][#b]?)/);
+    if (!rootMatch) return chordText; // No es un acorde reconocible
+
+    const originalRoot = rootMatch[1];
+    const chordType = mainPart.replace(originalRoot, '');
+
+    // Transponer la nota base usando la escala cromática
+    const newRoot = transposeNote(originalRoot, semitones);
+
+    // Transponer el bajo si existe, respetando la regla de enarmónicos basada en la nueva raíz
+    let newBass = bassPart;
+    if (newBass) {
+        // PASO CLAVE: Usar la nueva raíz transpuesta como base para la regla de enarmónicos del bajo
+        newBass = transposeBassWithEnharmonicRule(newBass, semitones, newRoot);
+    }
+
+    // Reconstruir el acorde
+    let result = newRoot + chordType;
+    if (newBass) {
+        result += '/' + newBass;
+    }
+
+    return result;
+}
+
+// Función para transponer todos los acordes visibles en la interfaz
+function transposeAllChordSlots(semitones) {
+    // Recorrer el array global 'chords' y transponer su texto
+    chords = chords.map(c => {
+        return {
+            ...c, // Mantener sys y pos
+            text: transposeChordText(c.text, semitones) // Transponer solo el texto
+        };
+    });
+
+    // Volver a renderizar todos los acordes para que se actualice la vista
+    renderAllChords();
+}
+
+
+
+
 
 
 function createLigado() {
@@ -2179,18 +2751,44 @@ function renderChords(sys) {
     chordEl.textContent = c.text;
     chordEl.style.left = slot.offsetLeft + "px"; // ✅ alineación izquierda
     chordEl.style.top = "0";
-    // clic → editar
+
+    // clic → editar O enarmonizar, dependiendo del modo
     chordEl.onclick = (e) => {
-      e.stopPropagation();
-      openChordEditor(c.sys, c.pos, c.text);
+      e.stopPropagation(); // Detener propagación para manejo global de clic fuera
+
+      if (enharmonicModeActive) {
+        // Modo enarmónico activo: enarmonizar el acorde
+        // Buscar el acorde en el array global 'chords' usando sys y pos
+        const chordIndex = chords.findIndex(ch => ch.sys === c.sys && ch.pos === c.pos);
+
+        if (chordIndex !== -1) {
+            // Obtener el texto actual
+            const currentText = chords[chordIndex].text;
+            // Aplicar enarmonización
+            const newText = enarmonizeChordText(currentText);
+            // Actualizar el array global
+            chords[chordIndex].text = newText;
+            // Actualizar el texto en el elemento HTML
+            chordEl.textContent = newText;
+            // Guardar el estado
+            autoSave(); // Asegura que el cambio se guarde
+        }
+        // No se cierra el modo aquí, sigue activo
+      } else {
+        // Modo enarmónico inactivo: comportamiento normal (abrir modal)
+        openChordEditor(c.sys, c.pos, c.text);
+      }
     };
+
     chordLayer.appendChild(chordEl);
   });
 }
 
 // ✅ Renderiza todos los sistemas
 function renderAllChords() {
-  for (let sys = 0; sys < SYSTEMS; sys++) {
+  // Usar la cantidad REAL de sistemas en lugar de la variable SYSTEMS
+  const allSystems = document.querySelectorAll(".system");
+  for (let sys = 0; sys < allSystems.length; sys++) {
     renderChords(sys);
   }
 }
@@ -2332,6 +2930,16 @@ function openChordEditor(sys, pos, currentText = "") {
     if (cancelBtn) cancelBtn.style.display = "inline-block";   // ✅ Mostrar Cancelar (modo normal)
     if (deleteBassBtn) deleteBassBtn.style.display = "none";   // ❌ Ocultar Borrar bajo (modo normal)
 
+    // (Agrega esto justo antes de renderNoteButtons();)
+    // 🔑 4.6. Configurar visibilidad del botón "Borrar acorde"
+    const deleteChordBtn = document.getElementById("deleteChordBtn");
+    // Si `currentText` tiene valor, significa que estamos editando un acorde existente
+    const isEditingExisting = currentText !== "";
+    if (deleteChordBtn) {
+      deleteChordBtn.style.display = isEditingExisting ? "inline-block" : "none";
+    }
+
+
     // 🔑 5. Renderizar botones según estado
     renderNoteButtons();
     renderAccidentalButtons();
@@ -2348,6 +2956,26 @@ function openChordEditor(sys, pos, currentText = "") {
 
     // 🔑 8. Mostrar modal
     document.getElementById("chordModal").style.display = "flex";
+}
+
+
+
+// ✅ Nueva función: Borrar el acorde actual del sistema/posición
+function deleteCurrentChord() {
+  const ok = confirm("¿Estás seguro de que querés borrar este acorde?");
+  if (!ok) return; // Si cancela, no hace nada
+
+  // Filtrar el array 'chords' para excluir el acorde en currentChordSys y currentChordPos
+  chords = chords.filter(c => !(c.sys === currentChordSys && c.pos === currentChordPos));
+
+  // Volver a renderizar todos los acordes para reflejar el cambio
+  renderAllChords();
+
+  // Guardar el estado actualizado
+  autoSave();
+
+  // Cerrar el modal
+  closeChordModal();
 }
 
 
@@ -2599,50 +3227,32 @@ function updatePreviewFromCustom(value) {
 }
 
 
-// ✅ Devuelve cantidad de sistemas actualmente visibles
-function getVisibleSystems() {
-  return Array.from(document.querySelectorAll(".system"))
-    .filter(el => el.style.display !== "none")
-    .length;
-}
 
-// ✅ Muestra el siguiente sistema oculto (si existe)
+
+
+
+
+
+// ✅ Agrega un nuevo sistema SIEMPRE al FINAL
 function addSystem() {
-  const visible = getVisibleSystems();
-  if (visible >= SYSTEMS) {
-    // ✅ Necesitamos crear un sistema nuevo (no solo mostrar)
-    const newSysIndex = SYSTEMS; // será el próximo índice
-    const newSystem = createSystem(newSysIndex);
-    // ✅ Añadir al último .tab-container existente
-    const lastTab = getLastTabContainer();
-    if (lastTab) {
-      lastTab.appendChild(newSystem);
-      SYSTEMS++; // ✅ aumentar el conteo global
-    } else {
-      console.error("❌ No se encontró .tab-container para añadir sistema");
-      return;
-    }
-  } else {
-    // ✅ Mostrar un sistema pre-existente (0–5)
-    const nextSysEl = document.querySelector(`.system[data-system="${visible}"]`);
-    if (nextSysEl) {
-      nextSysEl.style.display = "flex";
-    }
-  }
-
-  // ✅ Scroll al primer slot del nuevo sistema visible
-  const newSysIndex = visible;
-  const firstSlot = document.querySelector(
-    `.system[data-system="${newSysIndex}"]:not([style*="none"]) .slot[data-string="5"][data-pos="0"]`
-  );
+  const tabContainer = document.querySelector(".tab-container");
+  const allSystems = document.querySelectorAll(".system");
+  const newSystem = createSystem(allSystems.length);
+  
+  tabContainer.appendChild(newSystem);
+  
+  const firstSlot = newSystem.querySelector('.slot[data-string="5"][data-pos="0"]');
   if (firstSlot) {
+    activateSlot(firstSlot);
     ensureSlotVisible(firstSlot);
   }
-
-  // ✅ Intentar paginación
-  checkAndSplitPages();
-  updatePageTitles();
+  
+  updateAllPageTitles();
+  autoSave();
 }
+
+
+
 
 // ✅ Borra el sistema del slot activo (con confirmación si no está vacío)
 function removeActiveSystem() {
@@ -2651,182 +3261,143 @@ function removeActiveSystem() {
     return;
   }
 
-  const currentSys = +activeSlot.dataset.system;
-  const systemEl = document.querySelector(`.system[data-system="${currentSys}"]`);
-  if (!systemEl || systemEl.style.display === "none") return;
+  const systemEl = activeSlot.closest(".system");
+  if (!systemEl) return;
 
-  // ✅ Verificar si el sistema tiene contenido
-  const hasContent = [
-    ...systemEl.querySelectorAll(".slot")
-  ].some(s => s.textContent !== "-") ||
-    chords.some(c => c.sys === currentSys) ||
-    arcs.some(a => a.sys === currentSys);
+  // ✅ Verificar contenido
+  const hasNotes = [...systemEl.querySelectorAll(".slot")].some(s => s.textContent !== "-");
+  const sysIndex = [...document.querySelectorAll(".system")].indexOf(systemEl);
+  const hasChords = chords.some(c => c.sys === sysIndex);
+  const hasArcs = arcs.some(a => a.sys === sysIndex);
 
-  if (hasContent && !confirm("⚠️ El sistema no está vacío.\n¿Borrarlo de todos modos?")) {
+  if ((hasNotes || hasChords || hasArcs) && 
+      !confirm("⚠️ El sistema no está vacío.\n¿Borrarlo de todos modos?")) {
     return;
   }
 
-  // ✅ 1. Eliminar acordes y arcos del sistema
-  chords = chords.filter(c => c.sys !== currentSys);
-  arcs = arcs.filter(a => a.sys !== currentSys).map(a => {
-    // Re-indexar sistemas posteriores
-    if (a.sys > currentSys) a.sys--;
-    return a;
-  });
+  // ✅ Eliminar acordes y arcos asociados
+  chords = chords.filter(c => c.sys !== sysIndex);
+  arcs = arcs.filter(a => a.sys !== sysIndex);
 
-  // ✅ 2. Re-indexar acordes posteriores
-  chords = chords.map(c => c.sys > currentSys ? { ...c, sys: c.sys - 1 } : c);
+  // ✅ Reindexar sistemas posteriores
+  chords = chords.map(c => c.sys > sysIndex ? { ...c, sys: c.sys - 1 } : c);
+  arcs = arcs.map(a => a.sys > sysIndex ? { ...a, sys: a.sys - 1 } : a);
 
-  // ✅ 3. Ocultar sistema (no eliminar del DOM → compatibilidad)
-  systemEl.style.display = "none";
+  // ✅ ✅ ✅ ELIMINAR DEL DOM
+  systemEl.remove();
 
-  // ✅ 4. Re-indexar visual: mover todos los sistemas posteriores -1 visualmente
-  for (let s = currentSys + 1; s < SYSTEMS; s++) {
-    const el = document.querySelector(`.system[data-system="${s}"]`);
-    if (el && el.style.display !== "none") {
-      el.dataset.system = s - 1;
-      el.querySelectorAll(".slot").forEach(slot => slot.dataset.system = s - 1);
-    }
-  }
+  // ✅ ACTUALIZAR SYSTEMS GLOBAL
+  SYSTEMS = document.querySelectorAll(".system").length;
 
-  // ✅ 5. Actualizar DOM de arcos y acordes (re-renderizar)
-  arcs.forEach(a => a.el?.remove());
-  arcs = []; // reconstruiremos desde cero abajo
-  // ⚠️ Re-dibujar arcos manualmente (no hay función genérica, así que lo hacemos aquí)
-  // Pero mejor: usar lo que ya tienes → `loadState(buildState())` sería sobrekill.
-  // En su lugar: actualizamos los `data-system` en el DOM y re-renderizamos
-  chords.forEach(c => {
-    if (c.sys > currentSys) c.sys--;
-  });
-
-  // ✅ 6. Activar primer slot disponible (del sistema anterior o 0)
-  let newSys = Math.max(0, currentSys - 1);
-  let newActive = document.querySelector(
-    `.system[data-system="${newSys}"]:not([style*="none"]) .slot[data-string="5"][data-pos="0"]`
-  );
-  if (!newActive) newActive = document.querySelector('.slot[data-system="0"]');
-  if (newActive) activateSlot(newActive);
-
-  // ✅ 7. Actualizar renderizado y autosave
-  renderAllChords();
-  autoSave();
-
-  // ✅ 8. Verificar si alguna página quedó vacía → fusionar
-  checkAndMergePages();
-
-  // ✅ 9. Actualizar títulos
-  updatePageTitles();
-}
-
-// ✅ Actualiza los títulos con formato: "Título (hoja X de Y)"
-function updatePageTitles() {
-  const tabContainers = document.querySelectorAll(".tab-container");
-  const totalPages = tabContainers.length;
-  const titleInput = document.querySelector(".title");
-  if (!titleInput) return;
-
-  const baseTitle = titleInput.value
-    .replace(/\s*\(hoja\s+\d+\s+de\s+\d+\)/gi, "")
-    .trim() || "Partitura";
-
-  if (totalPages > 1) {
-    titleInput.value = `${baseTitle} (hoja 1 de ${totalPages})`;
-    // Si hay múltiples contenedores, replicar título en futuras páginas (opcional)
+  // ✅ Activar sistema anterior o primero
+  const remaining = document.querySelectorAll(".system");
+  let targetSystem;
+  if (sysIndex > 0 && remaining[sysIndex - 1]) {
+    targetSystem = remaining[sysIndex - 1];
   } else {
-    titleInput.value = baseTitle;
-  }
-}
-
-
-// ✅ Verifica si necesita dividir en páginas y lo hace
-function checkAndSplitPages() {
-  // ✅ Solo una página por ahora — dividimos mediante múltiples .tab-container dentro de UNA .page
-  const page = document.querySelector(".page");
-  if (!page) return;
-
-  const MAX_HEIGHT = 1000; // px
-  if (page.scrollHeight <= MAX_HEIGHT) return;
-
-  const tabContainers = document.querySelectorAll(".tab-container");
-  const lastTab = tabContainers[tabContainers.length - 1];
-  if (!lastTab) return;
-
-  // Buscar primer sistema que, al estar visible, excede la altura
-  const systems = Array.from(lastTab.querySelectorAll(".system"));
-  let cumulativeHeight = 0;
-  let splitIndex = -1;
-
-  for (let i = 0; i < systems.length; i++) {
-    const sys = systems[i];
-    if (sys.style.display === "none") continue;
-    const h = sys.offsetHeight + 8;
-    if (cumulativeHeight + h > MAX_HEIGHT) {
-      splitIndex = i;
-      break;
-    }
-    cumulativeHeight += h;
+    targetSystem = remaining[0];
   }
 
-  if (splitIndex <= 0 || splitIndex >= systems.length) return;
-
-  // ✅ Crear nuevo .tab-container dentro de la misma .page
-  const newTab = document.createElement("div");
-  newTab.className = "tab-container";
-  newTab.dataset.page = tabContainers.length + 1;
-
-  // Mover sistemas desde splitIndex en adelante
-  for (let i = splitIndex; i < systems.length; i++) {
-    const sys = systems[i];
-    if (sys.style.display !== "none") {
-      newTab.appendChild(sys);
-      // Reasignar system index para que sea consecutivo dentro del nuevo contenedor
-      const oldSys = +sys.dataset.system;
-      const newSys = i - splitIndex;
-      sys.dataset.system = newSys;
-      sys.querySelectorAll(".slot").forEach(s => s.dataset.system = newSys);
-      chords = chords.map(c => c.sys === oldSys ? { ...c, sys: newSys } : c);
-      arcs = arcs.map(a => a.sys === oldSys ? { ...a, sys: newSys } : a);
+  if (targetSystem) {
+    const newSlot = targetSystem.querySelector('.slot[data-string="5"][data-pos="0"]');
+    if (newSlot) {
+      activateSlot(newSlot);
+      ensureSlotVisible(newSlot);
     }
   }
 
-  // ✅ Insertar nuevo .tab-container después del último
-  lastTab.parentNode.insertBefore(newTab, lastTab.nextSibling);
-
-  // ✅ Forzar re-render de acordes (por cambio de system index)
+  updateSystemNumbers();
   renderAllChords();
-
-  updatePageTitles();
+  updateAllPageTitles();
+  autoSave();
 }
 
-// ✅ Verifica si puede fusionar páginas (útil tras borrar sistema)
-function checkAndMergePages() {
-  const pages = document.querySelectorAll(".page");
-  if (pages.length <= 1) return;
 
-  // Si la última página no tiene sistemas visibles → eliminarla
-  const lastPage = pages[pages.length - 1];
-  const lastTab = lastPage.querySelector("#tab");
-  const visibleSystemsInLast = lastTab ?
-    lastTab.querySelectorAll(".system:not([style*='none'])").length : 0;
+function updateSystemNumbers() {
+    // ✅ Esta función ya no hace nada, pero la mantenemos por compatibilidad
+    
+    // ✅ Remover clase 'current' de todos
+    document.querySelectorAll('.system').forEach(s => s.classList.remove('current'));
 
-  if (visibleSystemsInLast === 0) {
-    lastPage.remove();
-    // Reasignar system index en la página anterior para que siga 0,1,2...
-    const prevPage = document.querySelector(".page:last-of-type");
-    const prevTab = prevPage?.querySelector("#tab");
-    if (prevTab) {
-      const systems = prevTab.querySelectorAll(".system:not([style*='none'])");
-      systems.forEach((sys, idx) => {
-        sys.dataset.system = idx;
-        sys.querySelectorAll(".slot").forEach(s => s.dataset.system = idx);
-        chords = chords.map(c => c.sys >= idx ? { ...c, sys: idx } : c);
-        arcs = arcs.map(a => a.sys >= idx ? { ...a, sys: idx } : a);
-      });
+    // ✅ Resaltar el sistema del slot activo
+    if (activeSlot) {
+        const currentSys = activeSlot.closest('.system');
+        if (currentSys) currentSys.classList.add('current');
+    }
+}
+
+
+
+
+
+// ✅ Inserta títulos cada 6 sistemas para PDF
+function updateAllPageTitles() {
+  const mainTitle = document.querySelector(".title");
+  
+  // ✅ Obtener el título SIN la paginación
+  let currentTitle = mainTitle.value.trim();
+  
+  // ✅ Si el título contiene paginación, quitarla para obtener el título base
+  let baseTitle = currentTitle.replace(/\s*\(página\s+\d+\s+de\s+\d+\)/gi, "").trim();
+  
+  // ✅ Si después de quitar paginación queda vacío, usar "Partitura" solo para PDF
+  const pdfBaseTitle = baseTitle === "" ? "Partitura" : baseTitle;
+  
+  const allSystems = document.querySelectorAll(".system");
+  const totalPages = Math.ceil(allSystems.length / MAX_SYSTEMS_PER_PAGE);
+  
+  // ✅ ACTUALIZAR TÍTULO PRINCIPAL CON PAGINACIÓN (solo si hay más de 1 página)
+  if (totalPages > 1) {
+    // Solo agregar paginación si no la tiene ya
+    if (!currentTitle.includes("(página")) {
+      mainTitle.value = `${baseTitle} (página 1 de ${totalPages})`;
+    } else {
+      // Si ya tiene paginación, actualizar el número total de páginas
+      mainTitle.value = mainTitle.value.replace(
+        /\(página\s+\d+\s+de\s+\d+\)/,
+        `(página 1 de ${totalPages})`
+      );
+    }
+  } else {
+    // Si solo hay 1 página, mostrar solo el título sin paginación
+    if (currentTitle.includes("(página")) {
+      mainTitle.value = baseTitle;
     }
   }
-
-  updatePageTitles();
+  
+  // Eliminar títulos viejos de página
+  document.querySelectorAll(".page-title").forEach(el => el.remove());
+  
+  // Insertar títulos nuevos cada 6 sistemas (solo para PDF)
+  for (let pageNum = 1; pageNum < totalPages; pageNum++) {
+    const systemIndex = pageNum * MAX_SYSTEMS_PER_PAGE;
+    const system = allSystems[systemIndex];
+    
+    if (system) {
+      const pageTitle = document.createElement("input");
+      pageTitle.className = "page-title";
+      pageTitle.value = `${pdfBaseTitle} (página ${pageNum + 1} de ${totalPages})`;
+      pageTitle.readOnly = true;
+      
+      system.parentNode.insertBefore(pageTitle, system);
+    }
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2855,6 +3426,136 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+
+
+
+// --- VARIABLES GLOBALES PARA EL MODO ENARMÓNICO ---
+let enharmonicModeActive = false;
+let enharmonicModeIndicator = null;
+
+// --- FUNCIONES DEL MODO ENARMÓNICO ---
+
+// Función para activar/desactivar el modo enarmónico
+function toggleEnharmonicMode() {
+    console.log("toggleEnharmonicMode llamado");
+    enharmonicModeActive = !enharmonicModeActive;
+    console.log("enharmonicModeActive ahora es:", enharmonicModeActive);
+    updateEnharmonicModeUI();
+    closeMenu(); // Cierra el menú contextual después de seleccionar
+
+    if (enharmonicModeActive) {
+        // Pequeño delay para evitar que el clic del menú active el listener
+        setTimeout(() => {
+            document.addEventListener('click', exitEnharmonicModeIfClickOutside, { once: true });
+        }, 100);
+    }
+}
+
+// Función para actualizar la UI que indica el estado del modo
+function updateEnharmonicModeUI() {
+    console.log("updateEnharmonicModeUI llamado, enharmonicModeActive:", enharmonicModeActive); // <-- Línea nueva
+    if (!enharmonicModeIndicator) {
+        // Crear el indicador si no existe
+        enharmonicModeIndicator = document.createElement('div');
+        enharmonicModeIndicator.id = 'enharmonic-mode-indicator';
+        enharmonicModeIndicator.textContent = 'Modo Enarmónico';
+        enharmonicModeIndicator.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #ffeb3b;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10000;
+            display: none;
+        `;
+        document.body.appendChild(enharmonicModeIndicator);
+    }
+    enharmonicModeIndicator.style.display = enharmonicModeActive ? 'block' : 'none';
+}
+// Función para salir del modo si se hace clic fuera de un acorde
+function exitEnharmonicModeIfClickOutside(event) {
+    console.log("exitEnharmonicModeIfClickOutside llamado, target:", event.target); // <-- Agrega esto para depurar
+    if (enharmonicModeActive && !event.target.closest('.chord')) { // <-- Cambia '.chord-display' por '.chord'
+        enharmonicModeActive = false;
+        updateEnharmonicModeUI();
+    }
+}
+
+// --- LÓGICA DE ENARMÓNICO ---
+
+// Definir el mapa de enarmonía basado en la tabla
+const ENHARMONIC_MAP = new Map([
+    ["C", "B#"],
+    ["C#", "Db"],
+    ["D", "D"], // No cambia
+    ["Eb", "D#"],
+    ["E", "Fb"],
+    ["F", "E#"],
+    ["F#", "Gb"],
+    ["G", "G"], // No cambia
+    ["G#", "Ab"],
+    ["A", "A"], // No cambia
+    ["Bb", "A#"],
+    ["B", "Cb"],
+    // Y viceversa
+    ["B#", "C"],
+    ["Db", "C#"],
+    ["D#", "Eb"],
+    ["Fb", "E"],
+    ["E#", "F"],
+    ["Gb", "F#"],
+    ["Ab", "G#"],
+    ["A#", "Bb"],
+    ["Cb", "B"]
+]);
+
+// Función para obtener la nota enarmónica
+function getEnharmonicNote(note) {
+    return ENHARMONIC_MAP.get(note) || note; // Devuelve la transformada o la original si no está en el mapa
+}
+
+// Función para enarmonizar un acorde (reutiliza lógica de parsing)
+function enarmonizeChordText(chordText) {
+    if (!chordText || chordText.trim() === '') {
+        return chordText;
+    }
+
+    // Separar por slash para obtener parte del bajo
+    const parts = chordText.split('/');
+    const mainPart = parts[0];
+    const bassPart = parts.length > 1 ? parts[1] : null;
+
+    // Extraer la nota base (primera letra mayúscula y posible alteración)
+    const rootMatch = mainPart.match(/^([A-G][#b]?)/);
+    if (!rootMatch) return chordText; // No es un acorde reconocible
+
+    const originalRoot = rootMatch[1];
+    const chordType = mainPart.replace(originalRoot, '');
+
+    // Enarmonizar la nota base
+    const newRoot = getEnharmonicNote(originalRoot);
+
+    // Enarmonizar el bajo si existe
+    let newBass = bassPart;
+    if (newBass) {
+        newBass = getEnharmonicNote(newBass);
+    }
+
+    // Reconstruir el acorde
+    let result = newRoot + chordType;
+    if (newBass) {
+        result += '/' + newBass;
+    }
+
+    return result;
+}
+
+
+
 
 
 
@@ -2968,19 +3669,12 @@ if ('serviceWorker' in navigator) {
       />
     </div>
 
-    <div style="margin-top: 16px; display: flex; gap: 6px;">
-      <button onclick="applyChord()" style="flex:1; background:#007bff; color:white; border:none; padding:6px; border-radius:4px;">Aceptar</button>
-      <button id="deleteBassBtn" onclick="deleteBassOnly()" style="flex:1; background:#6c757d; color:white; border:none; padding:6px; border-radius:4px; display:none;">Borrar bajo</button>
-      <button id="cancelBtn" onclick="closeChordModal()" style="flex:1; background:#dc3545; color:white; border:none; padding:6px; border-radius:4px;">Cancelar</button>
-    </div>
+	<div style="margin-top: 16px; display: flex; gap: 6px;">
+		<button onclick="applyChord()" id="acceptBtn" style="flex:1; background:#007bff; color:white; border:none; padding:6px; border-radius:4px;">Aceptar</button>
+		<button id="deleteBassBtn" onclick="deleteBassOnly()" style="flex:1; background:#6c757d; color:white; border:none; padding:6px; border-radius:4px; display:none;">Borrar bajo</button>
+		<button id="deleteChordBtn" onclick="deleteCurrentChord()" style="flex:1; background:#dc3545; color:white; border:none; padding:6px; border-radius:4px; display:none;">Borrar acorde</button>
+		<button id="cancelBtn" onclick="closeChordModal()" style="flex:1; background:#6c757d; color:white; border:none; padding:6px; border-radius:4px;">Cancelar</button>
+	</div>
   </div>
 </div>
-<!-- ✅ MODAL DE ACORDES — FIN -->
-
-
-
-
-</body>
-
-</html>
-
+<!-- ✅ MODAL DE ACORDES — FIN -->                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             

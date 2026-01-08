@@ -1,4 +1,5 @@
-const CACHE_NAME = 'tablagenius-v2';
+// ⬇️⬇️⬇️ VERSIÓN CON TIMESTAMP (RECOMENDADO) ⬇️⬇️⬇️
+const CACHE_NAME = 'tablagenius-v' + Date.now();
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,38 +8,64 @@ const urlsToCache = [
   '/icon-512.png'
 ];
 
-// Instalar y cachear
+// INSTALAR - Forzar nueva versión
 self.addEventListener('install', event => {
+  console.log('Service Worker instalando NUEVA versión:', CACHE_NAME);
+  
+  // ⬇️⬇️⬇️ IMPORTANTE: Activar inmediatamente ⬇️⬇️⬇️
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Cache abierto, agregando recursos...');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
   );
 });
 
-// Interceptar todas las peticiones
+// ACTIVAR - Limpiar y tomar control
+self.addEventListener('activate', event => {
+  console.log('Service Worker activado - limpiando caches viejos');
+  
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          // Eliminar TODOS los caches antiguos
+          if (!cacheName.startsWith('tablagenius-v')) {
+            console.log('Eliminando cache viejo:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      // Toma control de TODAS las pestañas abiertas
+      return self.clients.claim();
+    })
+  );
+});
+
+// FETCH - Interceptar peticiones
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Si está en caché, devolver
+        // Cache primero
         if (response) {
+          console.log('Sirviendo desde cache:', event.request.url);
           return response;
         }
         
-        // Si no está, buscar en red Y guardar en caché
+        // Si no está en cache, ir a red
         return fetch(event.request).then(response => {
-          // No cachear solicitudes no exitosas
+          // Solo cachear respuestas exitosas
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
           
-          // Clonar respuesta para guardar en caché
+          // Guardar en cache para próxima vez
           const responseToCache = response.clone();
-          
           caches.open(CACHE_NAME)
             .then(cache => {
               cache.put(event.request, responseToCache);
@@ -48,25 +75,10 @@ self.addEventListener('fetch', event => {
         });
       })
       .catch(() => {
-        // Si falla todo, mostrar página offline
-        return caches.match('./index.html');
+        // Fallback: mostrar página offline
+        return caches.match('/index.html');
       })
   );
 });
 
-// Limpiar cachés viejos
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-
+console.log('Service Worker cargado:', CACHE_NAME);
